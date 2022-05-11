@@ -13,8 +13,6 @@ It's robust, designed for easy use and suitable for making all types of 2D games
 
 <a href="https://github.com/tinyBigGAMES/GameVision/releases" target="_blank">**Releases**</a> - These are the official release versions and deemed to be the most stable.
 
-Visit <a href="https://tinybiggames.com" target="_blank">tinyBigGAMES</a> website for the latest news, updates, downloads and licensing information.
-
 ## Features
 - **Free** for commercial use. See <a href="https://github.com/tinyBigGAMES/GameVision/blob/main/LICENSE" target="_blank">License agreement</a>.
 - Written in **Object Pascal**
@@ -24,6 +22,7 @@ Visit <a href="https://tinybiggames.com" target="_blank">tinyBigGAMES</a> websit
 - **Archive** (custom archive format, password protection)
 - **Display** (OpenGL, anti-aliasing, vsync, viewports, primitives, blending)
 - **Input** (keyboard, mouse and joystick)
+- **InputMap** (map an action 'up', 'down' for example to multiple input devices)
 - **Bitmap** (color key transparency, scaling, rotation, flipped, titled,  BMP, DDS, PCX, TGA, JPEG, PNG)
 - **Video** (play, pause, rewind, OGV format)
 - **Sprite** (pages, groups, animation, poly-point collision)
@@ -47,6 +46,8 @@ Visit <a href="https://tinybiggames.com" target="_blank">tinyBigGAMES</a> websit
 - In Delphi, load `GameVision Toolkit.groupproj` to load and compile the project files.
 - Use `GVArc` utility for making archive files (standard password protected zip format). Running the `makearc.bat` in `installdir\examples\bin` will build `Data.zip` that is used by the examples.
 - See examples in the `installdir\examples` for more information about usage.
+- You must include **GameVision.dll** in addition to any dependencies such as any archive files created via GVArch for example, in your project distribution.
+- **NOTE:** For your assurance, all official executables in the GameVision distro are code signed by tinyBigGAMES LLC. 
 
 ## Known Issues
 - This project is in active development so changes will be frequent 
@@ -62,9 +63,7 @@ uses
 
 type
   { TMyGame }
-  TMyGame = class(TCustomGame)
-  protected
-    FFont: TFont;
+  TMyGame = class(TGVGame)
   public
     procedure OnSetSettings(var aSettings: TGVSettings); override;
     procedure OnStartup; override;
@@ -174,7 +173,7 @@ See the examples for more information on usage.
 		<td><a href="https://www.facebook.com/groups/gamevisiontoolkit">https://www.facebook.com/groups/gamevisiontoolkit</a></td>
 	</tr>		
 	<tr>
-		<td>YouTubeo</td>
+		<td>YouTube</td>
 		<td><a href="https://vimeo.com/tinyBigGAMES">https://youtube.com/tinyBigGAMES</a></td>
 	</tr>
 </tbody>

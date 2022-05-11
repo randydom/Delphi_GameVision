@@ -1,0 +1,96 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{BA88A7DB-C21E-43AF-BCB1-CD93DFA1E2D1}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="GVArc.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="..\examples\HelloWorld.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="..\examples\Texture.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="..\examples\TextureTiled.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="..\examples\TextureScaled.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="..\examples\TextureRegion.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="GVArc">
+        <MSBuild Projects="GVArc.dproj"/>
+    </Target>
+    <Target Name="GVArc:Clean">
+        <MSBuild Projects="GVArc.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="GVArc:Make">
+        <MSBuild Projects="GVArc.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="HelloWorld">
+        <MSBuild Projects="..\examples\HelloWorld.dproj"/>
+    </Target>
+    <Target Name="HelloWorld:Clean">
+        <MSBuild Projects="..\examples\HelloWorld.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="HelloWorld:Make">
+        <MSBuild Projects="..\examples\HelloWorld.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Texture">
+        <MSBuild Projects="..\examples\Texture.dproj"/>
+    </Target>
+    <Target Name="Texture:Clean">
+        <MSBuild Projects="..\examples\Texture.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Texture:Make">
+        <MSBuild Projects="..\examples\Texture.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="TextureTiled">
+        <MSBuild Projects="..\examples\TextureTiled.dproj"/>
+    </Target>
+    <Target Name="TextureTiled:Clean">
+        <MSBuild Projects="..\examples\TextureTiled.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="TextureTiled:Make">
+        <MSBuild Projects="..\examples\TextureTiled.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="TextureScaled">
+        <MSBuild Projects="..\examples\TextureScaled.dproj"/>
+    </Target>
+    <Target Name="TextureScaled:Clean">
+        <MSBuild Projects="..\examples\TextureScaled.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="TextureScaled:Make">
+        <MSBuild Projects="..\examples\TextureScaled.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="TextureRegion">
+        <MSBuild Projects="..\examples\TextureRegion.dproj"/>
+    </Target>
+    <Target Name="TextureRegion:Clean">
+        <MSBuild Projects="..\examples\TextureRegion.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="TextureRegion:Make">
+        <MSBuild Projects="..\examples\TextureRegion.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="GVArc;HelloWorld;Texture;TextureTiled;TextureScaled;TextureRegion"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="GVArc:Clean;HelloWorld:Clean;Texture:Clean;TextureTiled:Clean;TextureScaled:Clean;TextureRegion:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="GVArc:Make;HelloWorld:Make;Texture:Make;TextureTiled:Make;TextureScaled:Make;TextureRegion:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>
