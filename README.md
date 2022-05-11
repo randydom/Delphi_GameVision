@@ -33,7 +33,7 @@ It's robust, designed for easy use and suitable for making all types of 2D games
 - **Font** (true type, scale, rotate)
 - **Timing** (time-based, frame elapsed, frame speed)
 - **Shaders** (vertex, pixel, GLSL)
-- **Misc** (collision, easing, screenshake, screenshot, starfield, colors, INI based config files, startup dialog, treeview menu)
+- **Misc** (collision, easing, screen shake, screenshot, starfield, colors, INI based config files, startup dialog, treeview menu)
 
 ## Minimum System Requirements
 - <a href="https://www.embarcadero.com/products/delphi/starter" target="_blank">Delphi Community Edition</a>

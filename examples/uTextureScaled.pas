@@ -185,7 +185,6 @@ begin
     FScale.W := FScale.W - cScaleAmount;
 
   GV.Math.ClipValue(FScale.W, cScaleMin, cScaleMax, False);
-
 end;
 
 procedure TTextureScaled.OnFixedUpdateFrame;
