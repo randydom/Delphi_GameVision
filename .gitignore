@@ -68,7 +68,8 @@ __recovery/
 # Boss dependency manager vendor folder https://github.com/HashLoad/boss
 modules/
 
-#
+# GameVision
 *.log
 *.zip
 examples/Win64
+bin/Screenshots

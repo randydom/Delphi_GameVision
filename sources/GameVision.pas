@@ -5663,6 +5663,7 @@ const
   // File Extentions Constatns
   GV_FILEEXT_LOG = 'log';
   GV_FILEEXT_INI = 'ini';
+  GV_FILEEXT_PNG = 'png';
 
   // Common Character
   GV_CR = #13;  // carrage return
@@ -5751,8 +5752,8 @@ type
     function Make(aRed: Byte; aGreen: Byte; aBlue: Byte; aAlpha: Byte): TGVColor; overload;
     function Make(aRed: Single; aGreen: Single; aBlue: Single; aAlpha: Single): TGVColor; overload;
     function Make(const aName: string): TGVColor; overload;
-    function Fade(var aFrom: TgVColor; aTo: TGVColor; aPos: Single): TGVColor;
-    function Equal(aColor1: TGVColor; aColor2: TGVColor): Boolean;
+    function Fade(aTo: TGVColor; aPos: Single): TGVColor;
+    function Equal(aColor: TGVColor): Boolean;
   end;
 
   { PGVColor }
@@ -6028,6 +6029,8 @@ type
     procedure WriteStringToStream(const aStream: TStream; const aStr: string);
     function  ReadStringFromStream(const aStream: TStream): string;
     function  ReadStringFromBuffer(const aBuffer: TGVBuffer): string;
+    function  FileCount(const aPath: string; const aSearchMask: string): Int64;
+    function  FindLastWrittenFile(const aDir: string; const aSearch: string): string;
     class function  IsSingleInstance(aMutexName: string; aKeepMutex: Boolean=True): Boolean;
 
 
@@ -6194,7 +6197,6 @@ type
     function GetPasswordFilename(const aFilename: string): PAnsiChar;
     function OpenFile(const aFilename: string): TGVArchiveFile; overload;
     function ExtractToBuffer(const aFilename: string): TGVBuffer;
-    function Pause(aPause: Boolean): Boolean;
     function Build(const aPassword: string; const aFilename: string; const aDirectory: string; aOnProgress: TGVArchiveBuildProgressEvent): Boolean;
   end;
 
@@ -6340,6 +6342,7 @@ type
     procedure SetBlendMode(aMode: TGVBlendMode);
     procedure SetBlendModeColor(aMode: TGVBlendModeColor; aColor: TGVColor);
     procedure RestoreDefaultBlendMode;
+    procedure Save(const aFilename: string);
   end;
 
 { --- PRIMITIVES ------------------------------------------------------------ }
@@ -6909,6 +6912,90 @@ type
     function LastError: string;
   end;
 
+{ --- SCREENSHOT ------------------------------------------------------------ }
+type
+  { TGVScreenshot }
+  TGVScreenshot = class(TGVObject)
+  protected
+    FFlag: Boolean;
+    FDir: string;
+    FBaseFilename: string;
+    FFilename: string;
+    procedure Process;
+  public
+    property Dir: string read FDir;
+    constructor Create; override;
+    destructor Destroy; override;
+    procedure Init(const aDir: WideString; const aBaseFilename: WideString);
+    procedure Take;
+  end;
+
+{ --- SCREENSHAKE ----------------------------------------------------------- }
+type
+  { TGVAScreenshake }
+  TGVAScreenshake = class
+  protected
+    FActive: Boolean;
+    FDuration: Single;
+    FMagnitude: Single;
+    FTimer: Single;
+    FPos: TGVVector;
+  public
+    constructor Create(aDuration: Single; aMagnitude: Single);
+    destructor Destroy; override;
+    procedure Process(aSpeed: Single; aDeltaTime: Double);
+    property Active: Boolean read FActive;
+  end;
+
+  { TGVScreenshake }
+  TGVScreenshake = class(TGVObject)
+  protected
+    FTrans: ALLEGRO_TRANSFORM;
+    FList: TObjectList<TGVAScreenshake>;
+    procedure Process(aSpeed: Single; aDeltaTime: Double);
+  public
+    constructor Create; override;
+    destructor Destroy; override;
+    procedure Start(aDuration: Single; aMagnitude: Single);
+    procedure Clear;
+    function  Active: Boolean;
+  end;
+
+{ --- STARFIELD ------------------------------------------------------------- }
+type
+  { TGVStarfield }
+  TGVStarfield = class(TGVObject)
+  protected
+    type
+      { TStarfieldItem }
+      TStarfieldItem = record
+        X, Y, Z, Speed: Single;
+      end;
+  protected
+    FCenter: TGVVector;
+    FMin: TGVVector;
+    FMax: TGVVector;
+    FViewScaleRatio: Single;
+    FViewScale: Single;
+    FStarCount: Cardinal;
+    FStar: array of TStarfieldItem;
+    FSpeed: TGVVector;
+    FVirtualPos: TGVVector;
+    procedure TransformDrawPoint(aX, aY, aZ: Single; aVPX, aVPY, aVPW, aVPH: Integer);
+    procedure Done;
+  public
+    constructor Create; override;
+    destructor Destroy; override;
+    procedure Init(aStarCount: Cardinal; aMinX, aMinY, aMinZ, aMaxX, aMaxY, aMaxZ, aViewScale: Single);
+    procedure SetVirtualPos(aX, aY: Single);
+    procedure GetVirtualPos(var aX: Single; var aY: Single);
+    procedure SetXSpeed(aSpeed: Single);
+    procedure SetYSpeed(aSpeed: Single);
+    procedure SetZSpeed(aSpeed: Single);
+    procedure Update(aDeltaTime: Single);
+    procedure Render;
+  end;
+
 { --- CUSTOMGAME ------------------------------------------------------------ }
 type
   { TGVSettings }
@@ -7026,6 +7113,7 @@ type
     procedure OnStartVideo(const aFilename: string); virtual;
     procedure OnFinishedVideo(const aFilename: string); virtual;
     procedure OnSpeechWord(aFWord: string; aText: string); virtual;
+    procedure OnScreenshot(const aFilename: string); virtual;
     function  GetTime: Double;
     procedure ResetTiming(aSpeed: Single=0; aFixedSpeed: Single=0);
     procedure SetUpdateSpeed(aSpeed: Single);
@@ -7064,6 +7152,7 @@ type
     FQueue: PALLEGRO_EVENT_QUEUE;
     FVoice: PALLEGRO_VOICE;
     FMixer: PALLEGRO_MIXER;
+    FFileState: array[False..True] of ALLEGRO_STATE;
     FMasterObjectList: TGVObjectList;
     FUtil: TGVUtil;
     FConsole: TGVConsole;
@@ -7080,6 +7169,8 @@ type
     FCollision: TGVCollision;
     FSpeech: TGVSpeech;
     FAsync: TGVAsync;
+    FScreenshot: TGVScreenshot;
+    FScreenshake: TGVScreenshake;
     function GetEvent: PALLEGRO_EVENT;
     procedure AbortDLL;
     procedure LoadDLL;
@@ -7087,7 +7178,6 @@ type
     procedure StartupAllegro;
     procedure ShutdownAllegro;
   public
-    FileState: array[0..1] of ALLEGRO_STATE;
     property Queue: PALLEGRO_EVENT_QUEUE read FQueue;
     property Voice: PALLEGRO_VOICE read FVoice;
     property Mixer: PALLEGRO_MIXER read FMixer;
@@ -7107,12 +7197,17 @@ type
     property Collision: TGVCollision read FCollision;
     property Speech: TGVSpeech read FSpeech;
     property Async: TGVAsync read FAsync;
+    property Screenshot: TGVScreenshot read FScreenshot;
+    property Screenshake: TGVScreenshake read FScreenshake;
     property Game: TGVGame read FGame;
-
     constructor Create; virtual;
     destructor Destroy; override;
     procedure Run(aGame: TGVCustomGameClass); overload;
     procedure Run(aGame: TGVGameClass); overload;
+    procedure SetFileSandBoxed(aEnable: Boolean);
+    function  GetFileSandBoxed: Boolean;
+    procedure SetFileSandboxWriteDir(aPath: string);
+    function  GetFileSandboxWriteDir: string;
   end;
 
 var
@@ -9036,24 +9131,26 @@ end;
 { TGVColor }
 function TGVColor.Make(aRed: Byte; aGreen: Byte; aBlue: Byte; aAlpha: Byte): TGVColor;
 var
-  LColor: ALLEGRO_COLOR absolute Result;
+  LColor: ALLEGRO_COLOR;
 begin
   LColor := al_map_rgba(aRed, aGreen, aBlue, aAlpha);
-  Result.Red := LColor.r;
-  Result.Green := LColor.g;
-  Result.Blue := LColor.b;
-  Result.Alpha := LColor.a;
+  Red := LColor.r;
+  Green := LColor.g;
+  Blue := LColor.b;
+  Alpha := LColor.a;
+  Result := Self;
 end;
 
 function TGVColor.Make(aRed: Single; aGreen: Single; aBlue: Single; aAlpha: Single): TGVColor;
 var
-  LColor: ALLEGRO_COLOR absolute Result;
+  LColor: ALLEGRO_COLOR;
 begin
   LColor := al_map_rgba_f(aRed, aGreen, aBlue, aAlpha);
-  Result.Red := LColor.r;
-  Result.Green := LColor.g;
-  Result.Blue := LColor.b;
-  Result.Alpha := LColor.a;
+  Red := LColor.r;
+  Green := LColor.g;
+  Blue := LColor.b;
+  Alpha := LColor.a;
+  Result := Self;
 end;
 
 function TGVColor.Make(const aName: string): TGVColor;
@@ -9062,13 +9159,14 @@ var
   LColor: ALLEGRO_COLOR absolute Result;
 begin
   LColor := al_color_name(LMarshaller.AsAnsi(aName).ToPointer);
-  Result.Red := LColor.r;
-  Result.Green := LColor.g;
-  Result.Blue := LColor.b;
-  Result.Alpha := LColor.a;
+  Red := LColor.r;
+  Green := LColor.g;
+  Blue := LColor.b;
+  Alpha := LColor.a;
+  Result := Self;
 end;
 
-function TGVColor.Fade(var aFrom: TGVColor; aTo: TGVColor; aPos: Single): TGVColor;
+function TGVColor.Fade(aTo: TGVColor; aPos: Single): TGVColor;
 var
   LColor: TGVColor;
 begin
@@ -9079,21 +9177,17 @@ begin
     aPos := 1.0;
 
   // fade colors
-  LColor.Alpha := aFrom.Alpha + ((aTo.Alpha - aFrom.Alpha) * aPos);
-  LColor.Blue := aFrom.Blue + ((aTo.Blue - aFrom.Blue) * aPos);
-  LColor.Green := aFrom.Green + ((aTo.Green - aFrom.Green) * aPos);
-  LColor.Red := aFrom.Red + ((aTo.Red - aFrom.Red) * aPos);
+  LColor.Alpha := Alpha + ((aTo.Alpha - Alpha) * aPos);
+  LColor.Blue := Blue + ((aTo.Blue - Blue) * aPos);
+  LColor.Green := Green + ((aTo.Green - Green) * aPos);
+  LColor.Red := Red + ((aTo.Red - Red) * aPos);
   Result := Make(LColor.Red, LColor.Green, LColor.Blue, LColor.Alpha);
-  aFrom.Red := LColor.Red;
-  aFrom.Green := LColor.Green;
-  aFrom.Blue := LColor.Blue;
-  aFrom.Alpha := LColor.Alpha;
 end;
 
-function TGVColor.Equal(aColor1: TGVColor; aColor2: TGVColor): Boolean;
+function TGVColor.Equal(aColor: TGVColor): Boolean;
 begin
-  if (aColor1.Red = aColor2.Red) and (aColor1.Green = aColor2.Green) and
-    (aColor1.Blue = aColor2.Blue) and (aColor1.Alpha = aColor2.Alpha) then
+  if (Red = aColor.Red) and (Green = aColor.Green) and
+    (Blue = aColor.Blue) and (Alpha = aColor.Alpha) then
     Result := True
   else
     Result := False;
@@ -9837,6 +9931,43 @@ begin
   aBuffer.Read(@LLength, SizeOf(LLength));
   SetLength(Result, LLength);
   if LLength > 0 then aBuffer.Read(@Result[1], LLength * SizeOf(Char));
+end;
+
+function TGVUtil.FileCount(const aPath: string; const aSearchMask: string): Int64;
+var
+  LSearchRec: TSearchRec;
+  LPath: string;
+begin
+  Result := 0;
+  LPath := aPath;
+  LPath := System.IOUtils.TPath.Combine(aPath, aSearchMask);
+  if FindFirst(LPath, faAnyFile, LSearchRec) = 0 then
+    repeat
+      if LSearchRec.Attr <> faDirectory then
+        Inc(Result);
+    until FindNext(LSearchRec) <> 0;
+end;
+
+function TGVUtil.FindLastWrittenFile(const aDir: string; const aSearch: string): string;
+Var
+ LSearchRec :TSearchRec;
+ LLastWrite: TDateTime;
+ LLastWriteAllFiles: TDateTime;
+ LDir: string;
+begin
+ LDir := IncludeTrailingBackslash(aDir);
+ LLastWriteAllFiles := 0;
+ Result := '';
+ if System.SysUtils.FindFirst(LDir+aSearch,faAnyFile-faDirectory,LSearchRec)=0 then
+  repeat
+   LLastWrite  := LSearchRec.TimeStamp;
+   if LLastWrite > LLastWriteAllFiles Then
+    begin
+     LLastWriteAllFiles := LLastWrite;
+     Result := TPath.Combine(LDir, LSearchRec.Name);
+    end;
+  until System.SysUtils.FindNext(LSearchRec)<>0;
+ System.SysUtils.FindClose(LSearchRec);
 end;
 
 //Creates a mutex to see if the program is already running.
@@ -11077,20 +11208,6 @@ begin
   Result := LResult;
 end;
 
-function TGVArchive.Pause(aPause: Boolean): Boolean;
-begin
-  Result := False;
-  if not IsOpen then Exit;
-  if aPause then
-    begin
-      al_restore_state(@GV.FileState[0]);
-    end
-  else
-    begin
-      al_restore_state(@GV.FileState[1]);
-    end;
-end;
-
 function TGVArchive.Build(const aPassword: string; const aFilename: string; const aDirectory: string; aOnProgress: TGVArchiveBuildProgressEvent): Boolean;
 var
   LMarshaller: array[0..1] of TMarshaller;
@@ -11205,9 +11322,9 @@ begin
   if aArchive = nil then Exit;
   if not aArchive.IsOpen then Exit;
   if not aArchive.FileExist(aFilename) then Exit;
-  if aArchive = nil then al_restore_state(@GV.FileState[0]);
+  if aArchive = nil then GV.SetFileSandBoxed(False);
   LHandle := al_fopen(aArchive.GetPasswordFilename(aFilename), 'rb');
-  if aArchive = nil then al_restore_state(@GV.FileState[1]);
+  if aArchive = nil then GV.SetFileSandBoxed(True);
   if LHandle = nil then Exit;
   FHandle := LHandle;
   Result := IsOpen;
@@ -11330,9 +11447,9 @@ begin
       LFilename := aFilename;
     end;
 
-   if aArchive = nil then al_restore_state(@GV.FileState[0]);
+   if aArchive = nil then GV.SetFileSandBoxed(False);
    LHandle := al_load_bitmap(LMarshaller.AsUtf8(LFilename).ToPointer);
-   if aArchive = nil then al_restore_state(@GV.FileState[1]);
+   if aArchive = nil then GV.SetFileSandBoxed(True);
    if LHandle = nil then Exit;
 
   Unload;
@@ -11952,6 +12069,56 @@ begin
   if FHandle = nil then Exit;
   al_set_blender(ALLEGRO_ADD, ALLEGRO_ONE, ALLEGRO_INVERSE_ALPHA);
   al_set_blend_color(al_map_rgba(255, 255, 255, 255));
+end;
+
+procedure TGVWindow.Save(const aFilename: string);
+var
+  LBackbuffer: PALLEGRO_BITMAP;
+  LScreenshot: PALLEGRO_BITMAP;
+  LVX, LVY, LVW, LVH: Integer;
+  LFilename: string;
+  LMarshallar: TMarshaller;
+  LSize: TGVRectangle;
+begin
+  if FHandle = nil then Exit;
+
+  // get viewport size
+  GetViewportSize(LSize);
+  LVX := Round(LSize.X);
+  LVY := Round(LSize.Y);
+  LVW := Round(LSize.Width);
+  LVH := Round(LSize.Height);
+
+  // create LScreenshot bitmpat
+  al_set_new_bitmap_flags(ALLEGRO_MIN_LINEAR or ALLEGRO_MAG_LINEAR);
+  LScreenshot := al_create_bitmap(LVW, LVH);
+
+  // exit if failed to create LScreenshot bitmap
+  if LScreenshot = nil then Exit;
+
+  // get LBackbuffer
+  LBackbuffer := al_get_backbuffer(FHandle);
+
+  // set target to LScreenshot bitmap
+  al_set_target_bitmap(LScreenshot);
+
+  // draw viewport area of LBackbuffer to LScreenshot bitmap
+  al_draw_bitmap_region(LBackbuffer, LVX, LVY, LVW, LVH, 0, 0, 0);
+
+  // restore LBackbuffer target
+  al_set_target_bitmap(LBackbuffer);
+
+  // make sure filename is a PNG file
+  LFilename := aFilename;
+  LFilename := TPath.ChangeExtension(LFilename, GV_FILEEXT_PNG);
+
+  // save screen bitmap to PNG filename
+  GV.SetFileSandBoxed(False);
+  if not al_save_bitmap(LMarshallar.AsUtf8(LFilename).ToPointer, LScreenshot) then
+  GV.SetFileSandBoxed(True);
+
+  // destroy LScreenshot bitmap
+  al_destroy_bitmap(LScreenshot);
 end;
 
 { --- PRIMITIVES ------------------------------------------------------------ }
@@ -12693,9 +12860,9 @@ begin
     end;
 
   al_set_new_bitmap_flags(ALLEGRO_MIN_LINEAR or ALLEGRO_MAG_LINEAR or ALLEGRO_MIPMAP or ALLEGRO_VIDEO_BITMAP);
-  if aArchive = nil then al_restore_state(@GV.FileState[0]);
+  if aArchive = nil then GV.SetFileSandBoxed(False);
   LHandle := al_load_ttf_font(LMarshaller.AsUtf8(LFilename).ToPointer, -aSize, 0);
-  if aArchive = nil then al_restore_state(@GV.FileState[1]);
+  if aArchive = nil then GV.SetFileSandBoxed(True);
   if LHandle = nil then Exit;
 
   Unload;
@@ -12865,9 +13032,9 @@ begin
       LFilename := aFilename;
     end;
 
-  if aArchive = nil then al_restore_state(@GV.FileState[0]);
+  if aArchive = nil then GV.SetFileSandBoxed(False);
   LMusic.Handle := al_load_audio_stream(LMarshaller.AsUtf8(LFilename).ToPointer, 4, 2048);
-  if aArchive = nil then al_restore_state(@GV.FileState[1]);
+  if aArchive = nil then GV.SetFileSandBoxed(True);
 
   if LMusic.Handle = nil then Exit;
 
@@ -13087,9 +13254,9 @@ begin
       LFilename := aFilename;
     end;
 
-  if aArchive = nil then al_restore_state(@GV.FileState[0]);
+  if aArchive = nil then GV.SetFileSandBoxed(False);
   LSound.Handle := al_load_sample(LMarshaller.AsUtf8(LFilename).ToPointer);
-  if aArchive = nil then al_restore_state(@GV.FileState[1]);
+  if aArchive = nil then GV.SetFileSandBoxed(True);
 
   if LSound.Handle = nil then Exit;
 
@@ -13243,9 +13410,9 @@ begin
       LFilename := aFilename;
     end;
 
-  if aArchive = nil then al_restore_state(@GV.FileState[0]);
+  if aArchive = nil then GV.SetFileSandBoxed(False);
   LHandle := al_open_video(LMarshallar.AsUtf8(LFilename).ToPointer);
-  if aArchive = nil then al_restore_state(@GV.FileState[1]);
+  if aArchive = nil then GV.SetFileSandBoxed(True);
 
   if LHandle = nil then Exit;
 
@@ -14082,6 +14249,411 @@ begin
   Result := gv_database_last_error(FHandle);
 end;
 
+{ --- SCREENSHOT ------------------------------------------------------------ }
+{ TGVScreenshot }
+procedure TGVScreenshot.Process;
+var
+  LC: Integer;
+  LF, LD, LB: string;
+begin
+  if GV.Screenshake.Active then Exit;
+  if not FFlag then Exit;
+
+  FFlag := False;
+
+  // directory
+  LD := ExpandFilename(FDir);
+  ForceDirectories(LD);
+
+  // base name
+  LB := FBaseFilename;
+
+  // search file maks
+  LF := LB + '*.png';
+
+  // file count
+  LC := GV.Util.FileCount(LD, LF);
+
+  // screenshot file mask
+  LF := Format('%s\%s (%.6d).png', [LD, LB, LC]);
+  FFilename := LF;
+
+  // save screenshot
+  GV.Window.Save(LF);
+
+  // call event handler
+  if TFile.Exists(LF) then
+    GV.Game.OnScreenshot(LF);
+end;
+
+constructor TGVScreenshot.Create;
+begin
+  inherited;
+  FFlag := False;
+  FFilename := '';
+  FDir := 'Screenshots';
+  FBaseFilename := 'Screen';
+  Init('', '');
+end;
+
+destructor TGVScreenshot.Destroy;
+begin
+  inherited;
+end;
+
+procedure TGVScreenshot.Init(const aDir: WideString; const aBaseFilename: WideString);
+var
+  LDir: string;
+  LBaseFilename: string;
+begin
+  FFilename := '';
+  FFlag := False;
+
+  LDir := aDir;
+  LBaseFilename := aBaseFilename;
+
+  if LDir.IsEmpty then
+    LDir := 'Screenshots';
+  FDir := LDir;
+
+  if LBaseFilename.IsEmpty then
+    LBaseFilename := 'Screen';
+  FBaseFilename := LBaseFilename;
+
+  ChangeFileExt(FBaseFilename, '');
+end;
+
+procedure TGVScreenshot.Take;
+begin
+  FFlag := True;
+end;
+
+
+{ --- SCREENSHAKE ----------------------------------------------------------- }
+{ TGVAScreenshake }
+constructor TGVAScreenshake.Create(aDuration: Single; aMagnitude: Single);
+begin
+  inherited Create;
+
+  FActive := True;
+  FDuration := aDuration;
+  FMagnitude := aMagnitude;
+  FTimer := 0;
+  FPos.x := 0;
+  FPos.y := 0;
+end;
+
+destructor TGVAScreenshake.Destroy;
+begin
+
+  inherited;
+end;
+
+function lerp(t: Single; a: Single; b: Single): Single; inline;
+begin
+  Result := (1 - t) * a + t * b;
+end;
+
+procedure TGVAScreenshake.Process(aSpeed: Single; aDeltaTime: Double);
+begin
+  if not FActive then Exit;
+
+  FDuration := FDuration - (aSpeed * aDeltaTime);
+  if FDuration <= 0 then
+  begin
+    GV.Window.SetTransformPosition(-FPos.x, -FPos.y);
+    FActive := False;
+    Exit;
+  end;
+
+  if Round(FDuration) <> Round(FTimer) then
+  begin
+    GV.Window.SetTransformPosition(-FPos.x, -FPos.y);
+
+    FPos.x := Round(GV.Math.RandomRange(-FMagnitude, FMagnitude));
+    FPos.y := Round(GV.Math.RandomRange(-FMagnitude, FMagnitude));
+
+    GV.Window.SetTransformPosition(FPos.x, FPos.y);
+
+    FTimer := FDuration;
+  end;
+end;
+
+{ TGVScreenshake }
+procedure TGVScreenshake.Process(aSpeed: Single; aDeltaTime: Double);
+var
+  LShake: TGVAScreenshake;
+  LFlag: Boolean;
+begin
+  // process shakes
+  LFlag := Active;
+  for LShake in FList do
+  begin
+    if LShake.Active then
+    begin
+      LShake.Process(aSpeed, aDeltaTime);
+    end
+    else
+    begin
+      FList.Remove(LShake);
+    end;
+  end;
+
+  if LFlag then
+  begin
+    if not Active then
+    begin
+      // Lib.Display.ResetTransform;
+    end;
+  end;
+end;
+
+constructor TGVScreenshake.Create;
+begin
+  inherited;
+  FList := TObjectList<TGVAScreenshake>.Create(True);
+  al_identity_transform(@FTrans);
+end;
+
+destructor TGVScreenshake.Destroy;
+begin
+  FreeAndNil(FList);
+  inherited;
+end;
+
+procedure TGVScreenshake.Start(aDuration: Single; aMagnitude: Single);
+var
+  LShake: TGVAScreenshake;
+begin
+  LShake := TGVAScreenshake.Create(aDuration, aMagnitude);
+  FList.Add(LShake);
+end;
+
+procedure TGVScreenshake.Clear;
+begin
+  FList.Clear;
+end;
+
+function TGVScreenshake.Active: Boolean;
+begin
+  Result := Boolean(FList.Count > 0);
+end;
+
+{ --- STARFIELD ------------------------------------------------------------- }
+{ TGVStarfield }
+procedure TGVStarfield.TransformDrawPoint(aX, aY, aZ: Single; aVPX, aVPY, aVPW, aVPH: Integer);
+var
+  LX, LY: Single;
+  LSW, LSH: Single;
+  LOOZ: Single;
+  LCV: byte;
+  LColor: TGVColor;
+
+  function IsVisible(vx, vy, vw, vh: Single): Boolean;
+  begin
+    Result := False;
+    if ((vx - vw) < 0) then
+      Exit;
+    if (vx > (aVPW - 1)) then
+      Exit;
+    if ((vy - vh) < 0) then
+      Exit;
+    if (vy > (aVPH - 1)) then
+      Exit;
+    Result := True;
+  end;
+
+begin
+  FViewScaleRatio := aVPW / aVPH;
+  FCenter.X := (aVPW / 2) + aVPX;
+  FCenter.Y := (aVPH / 2) + aVPY;
+
+  LOOZ := ((1.0 / aZ) * FViewScale);
+  LX := (FCenter.X - aVPX) - (aX * LOOZ) * FViewScaleRatio;
+  LY := (FCenter.Y - aVPY) + (aY * LOOZ) * FViewScaleRatio;
+  LSW := (GV.Window.Scale * LOOZ);
+  if LSW < GV.Window.Scale then
+    LSW := GV.Window.Scale;
+  LSH := (GV.Window.Scale * LOOZ);
+  if LSH < GV.Window.Scale then
+    LSH := GV.Window.Scale;
+
+  if not IsVisible(LX, LY, LSW, LSH) then Exit;
+  LCV := round(255.0 - (((1.0 / FMax.Z) / (1.0 / aZ)) * 255.0));
+
+  LColor.Make(LCV, LCV, LCV, LCV);
+
+  LX := LX - FVirtualPos.X;
+  LY := LY - FVirtualPos.Y;
+
+  GV.Primitive.FilledRectangle(LX, LY, LSW, LSH, LColor);
+end;
+
+constructor TGVStarfield.Create;
+begin
+  inherited;
+
+  Init(250, -1000, -1000, 10, 1000, 1000, 1000, 120);
+end;
+
+destructor TGVStarfield.Destroy;
+begin
+  Done;
+  inherited;
+end;
+
+procedure TGVStarfield.Init(aStarCount: Cardinal; aMinX, aMinY, aMinZ, aMaxX, aMaxY, aMaxZ, aViewScale: Single);
+var
+  LVPX, LVPY: Integer;
+  LVPW, LVPH: Integer;
+  LI: Integer;
+  LSize: TGVRectangle;
+begin
+  Done;
+
+  FStarCount := aStarCount;
+  SetLength(FStar, FStarCount);
+  GV.Window.GetViewportSize(LSize);
+  LVPX := Round(LSize.X);
+  LVPY := Round(LSize.Y);
+  LVPW := Round(LSize.Width);
+  LVPH := Round(LSize.Height);
+
+  FViewScale := aViewScale;
+  FViewScaleRatio := LVPW / LVPH;
+  FCenter.X := (LVPW / 2) + LVPX;
+  FCenter.Y := (LVPH / 2) + LVPY;
+  FCenter.Z := 0;
+
+  FMin.X := aMinX;
+  FMin.Y := aMinY;
+  FMin.Z := aMinZ;
+  FMax.X := aMaxX;
+  FMax.Y := aMaxY;
+  FMax.Z := aMaxZ;
+
+  for LI := 0 to FStarCount - 1 do
+  begin
+    FStar[LI].X := GV.Math.RandomRange(FMin.X, FMax.X);
+    FStar[LI].Y := GV.Math.RandomRange(FMin.Y, FMax.Y);
+    FStar[LI].Z := GV.Math.RandomRange(FMin.Z, FMax.Z);
+  end;
+
+  SetXSpeed(0.0);
+  SetYSpeed(0.0);
+  SetZSpeed(-60*3);
+  SetVirtualPos(0, 0);
+end;
+
+procedure TGVStarfield.Done;
+begin
+  FStar := nil;
+end;
+
+procedure TGVStarfield.SetVirtualPos(aX, aY: Single);
+begin
+  FVirtualPos.X := aX;
+  FVirtualPos.Y := aY;
+  FVirtualPos.Z := 0;
+end;
+
+procedure TGVStarfield.GetVirtualPos(var aX: Single; var aY: Single);
+begin
+  aX := FVirtualPos.X;
+  aY := FVirtualPos.Y;
+end;
+
+procedure TGVStarfield.SetXSpeed(aSpeed: Single);
+begin
+  FSpeed.X := aSpeed;
+end;
+
+procedure TGVStarfield.SetYSpeed(aSpeed: Single);
+begin
+  FSpeed.Y := aSpeed;
+end;
+
+procedure TGVStarfield.SetZSpeed(aSpeed: Single);
+begin
+
+  FSpeed.Z := aSpeed;
+end;
+
+procedure TGVStarfield.Update(aDeltaTime: Single);
+var
+  LI: Integer;
+
+  procedure SetRandomPos(aIndex: Integer);
+  begin
+    FStar[aIndex].X := GV.Math.RandomRange(FMin.X, FMax.X);
+    FStar[aIndex].Y := GV.Math.RandomRange(FMin.Y, FMax.Y);
+    FStar[aIndex].Z := GV.Math.RandomRange(FMin.Z, FMax.Z);
+  end;
+
+begin
+
+  for LI := 0 to FStarCount - 1 do
+  begin
+    FStar[LI].X := FStar[LI].X + (FSpeed.X * aDeltaTime);
+    FStar[LI].Y := FStar[LI].Y + (FSpeed.Y * aDeltaTime);
+    FStar[LI].Z := FStar[LI].Z + (FSpeed.Z * aDeltaTime);
+
+    if FStar[LI].X < FMin.X then
+    begin
+      SetRandomPos(LI);
+      FStar[LI].X := FMax.X;
+    end;
+
+    if FStar[LI].X > FMax.X then
+    begin
+      SetRandomPos(LI);
+      FStar[LI].X := FMin.X;
+    end;
+
+    if FStar[LI].Y < FMin.Y then
+    begin
+      SetRandomPos(LI);
+      FStar[LI].Y := FMax.Y;
+    end;
+
+    if FStar[LI].Y > FMax.Y then
+    begin
+      SetRandomPos(LI);
+      FStar[LI].Y := FMin.Y;
+    end;
+
+    if FStar[LI].Z < FMin.Z then
+    begin
+      SetRandomPos(LI);
+      FStar[LI].Z := FMax.Z;
+    end;
+
+    if FStar[LI].Z > FMax.Z then
+    begin
+      SetRandomPos(LI);
+      FStar[LI].Z := FMin.Z;
+    end;
+
+  end;
+end;
+
+procedure TGVStarfield.Render;
+var
+  LI: Integer;
+  LVPX, LVPY, LVPW, LVPH: Integer;
+  LSize: TGVRectangle;
+begin
+  GV.Window.GetViewportSize(LSize);
+  LVPX := Round(LSize.X);
+  LVPY := Round(LSize.Y);
+  LVPW := Round(LSize.Width);
+  LVPH := Round(LSize.Height);
+  for LI := 0 to FStarCount - 1 do
+  begin
+    TransformDrawPoint(FStar[LI].X, FStar[LI].Y, FStar[LI].Z, LVPX, LVPY, LVPW, LVPH);
+  end;
+end;
+
 
 { --- CUSTOMGAME ------------------------------------------------------------ }
 { TGVCustomGame }
@@ -14154,11 +14726,17 @@ begin
   FTimer.Accumulator := FTimer.Accumulator + FTimer.Passed;
   while (FTimer.Accumulator >= FTimer.DeltaTime) do
   begin
+    // process screen shakes
+    GV.Screenshake.Process(FTimer.UpdateSpeed, FTimer.DeltaTime);
+
+    // call herited update frame
     OnUpdateFrame(FTimer.DeltaTime);
 
+    // call herited fixed update frame
     if FrameSpeed(FTimer.FixedUpdateTimer, FTimer.FixedUpdateSpeed) then
       OnFixedUpdateFrame;
 
+    // update accumulator
     FTimer.Accumulator := FTimer.Accumulator - FTimer.DeltaTime;
   end;
 end;
@@ -14399,6 +14977,10 @@ procedure TGVGame.OnSpeechWord(aFWord: string; aText: string);
 begin
 end;
 
+procedure TGVGame.OnScreenshot(const aFilename: string);
+begin
+end;
+
 function  TGVGame.GetTime: Double;
 begin
   Result := al_get_time;
@@ -14626,6 +15208,7 @@ begin
         GV.Window.ResetTransform;
         OnRenderHUD;
         al_use_transform(@LCurrentTransform);
+        GV.Screenshot.Process;
         OnShowFrame;
         OnEndFrame;
       end
@@ -14788,10 +15371,10 @@ begin
   end;
 
   // init physfs
-  al_store_state(@FileState[0], ALLEGRO_STATE_NEW_FILE_INTERFACE);
+  al_store_state(@FFileState[False], ALLEGRO_STATE_NEW_FILE_INTERFACE);
   PHYSFS_init(nil);
   al_set_physfs_file_interface;
-  al_store_state(@FileState[1], ALLEGRO_STATE_NEW_FILE_INTERFACE);
+  al_store_state(@FFileState[True], ALLEGRO_STATE_NEW_FILE_INTERFACE);
   //PHYSFS_mount(LMarsaller.AsUtf8(TPath.GetDirectoryName(ParamStr(0))).ToPointer, '', 1);
   //PHYSFS_mount('./', '', 1);
 end;
@@ -14870,10 +15453,14 @@ begin
   FCollision := TGVCollision.Create;
   FSpeech := TGVSpeech.Create;
   FAsync := TGVAsync.Create;
+  FScreenshot := TGVScreenshot.Create;
+  FScreenshake := TGVScreenshake.Create;
 end;
 
 destructor TGV.Destroy;
 begin
+  FreeAndNil(FScreenshot);
+  FreeAndNil(FScreenshake);
   FreeAndNil(FAsync);
   FreeAndNil(FSpeech);
   FreeAndNil(FCollision);
@@ -14926,6 +15513,29 @@ begin
   LGame.OnPostStartup;
   FreeAndNil(LGame);
 end;
+
+procedure TGV.SetFileSandBoxed(aEnable: Boolean);
+begin
+  al_restore_state(@FFileState[aEnable]);
+end;
+
+function  TGV.GetFileSandBoxed: Boolean;
+begin
+  Result := Boolean(al_get_new_file_interface = @FFileState[True]);
+end;
+
+procedure TGV.SetFileSandboxWriteDir(aPath: string);
+var
+  LMarshaller: TMarshaller;
+begin
+  PHYSFS_setWriteDir(LMarshaller.AsUtf8(aPath).ToPointer);
+end;
+
+function  TGV.GetFileSandboxWriteDir: string;
+begin
+  Result := string(PHYSFS_getWriteDir);
+end;
+
 
 {$ENDREGION}
 

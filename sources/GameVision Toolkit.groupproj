@@ -21,6 +21,12 @@
         <Projects Include="..\examples\TextureRegion.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="..\examples\Screenshot.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="..\examples\Screenshake.dproj">
+            <Dependencies/>
+        </Projects>
     </ItemGroup>
     <ProjectExtensions>
         <Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -83,14 +89,32 @@
     <Target Name="TextureRegion:Make">
         <MSBuild Projects="..\examples\TextureRegion.dproj" Targets="Make"/>
     </Target>
+    <Target Name="Screenshot">
+        <MSBuild Projects="..\examples\Screenshot.dproj"/>
+    </Target>
+    <Target Name="Screenshot:Clean">
+        <MSBuild Projects="..\examples\Screenshot.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Screenshot:Make">
+        <MSBuild Projects="..\examples\Screenshot.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Screenshake">
+        <MSBuild Projects="..\examples\Screenshake.dproj"/>
+    </Target>
+    <Target Name="Screenshake:Clean">
+        <MSBuild Projects="..\examples\Screenshake.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Screenshake:Make">
+        <MSBuild Projects="..\examples\Screenshake.dproj" Targets="Make"/>
+    </Target>
     <Target Name="Build">
-        <CallTarget Targets="GVArc;HelloWorld;Texture;TextureTiled;TextureScaled;TextureRegion"/>
+        <CallTarget Targets="GVArc;HelloWorld;Texture;TextureTiled;TextureScaled;TextureRegion;Screenshot;Screenshake"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="GVArc:Clean;HelloWorld:Clean;Texture:Clean;TextureTiled:Clean;TextureScaled:Clean;TextureRegion:Clean"/>
+        <CallTarget Targets="GVArc:Clean;HelloWorld:Clean;Texture:Clean;TextureTiled:Clean;TextureScaled:Clean;TextureRegion:Clean;Screenshot:Clean;Screenshake:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="GVArc:Make;HelloWorld:Make;Texture:Make;TextureTiled:Make;TextureScaled:Make;TextureRegion:Make"/>
+        <CallTarget Targets="GVArc:Make;HelloWorld:Make;Texture:Make;TextureTiled:Make;TextureScaled:Make;TextureRegion:Make;Screenshot:Make;Screenshake:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>
