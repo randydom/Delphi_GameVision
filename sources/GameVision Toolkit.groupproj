@@ -27,6 +27,12 @@
         <Projects Include="..\examples\Screenshake.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="..\examples\Entity.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="..\examples\EntityPolyPointCollision.dproj">
+            <Dependencies/>
+        </Projects>
     </ItemGroup>
     <ProjectExtensions>
         <Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -107,14 +113,32 @@
     <Target Name="Screenshake:Make">
         <MSBuild Projects="..\examples\Screenshake.dproj" Targets="Make"/>
     </Target>
+    <Target Name="Entity">
+        <MSBuild Projects="..\examples\Entity.dproj"/>
+    </Target>
+    <Target Name="Entity:Clean">
+        <MSBuild Projects="..\examples\Entity.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Entity:Make">
+        <MSBuild Projects="..\examples\Entity.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="EntityPolyPointCollision">
+        <MSBuild Projects="..\examples\EntityPolyPointCollision.dproj"/>
+    </Target>
+    <Target Name="EntityPolyPointCollision:Clean">
+        <MSBuild Projects="..\examples\EntityPolyPointCollision.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="EntityPolyPointCollision:Make">
+        <MSBuild Projects="..\examples\EntityPolyPointCollision.dproj" Targets="Make"/>
+    </Target>
     <Target Name="Build">
-        <CallTarget Targets="GVArc;HelloWorld;Texture;TextureTiled;TextureScaled;TextureRegion;Screenshot;Screenshake"/>
+        <CallTarget Targets="GVArc;HelloWorld;Texture;TextureTiled;TextureScaled;TextureRegion;Screenshot;Screenshake;Entity;EntityPolyPointCollision"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="GVArc:Clean;HelloWorld:Clean;Texture:Clean;TextureTiled:Clean;TextureScaled:Clean;TextureRegion:Clean;Screenshot:Clean;Screenshake:Clean"/>
+        <CallTarget Targets="GVArc:Clean;HelloWorld:Clean;Texture:Clean;TextureTiled:Clean;TextureScaled:Clean;TextureRegion:Clean;Screenshot:Clean;Screenshake:Clean;Entity:Clean;EntityPolyPointCollision:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="GVArc:Make;HelloWorld:Make;Texture:Make;TextureTiled:Make;TextureScaled:Make;TextureRegion:Make;Screenshot:Make;Screenshake:Make"/>
+        <CallTarget Targets="GVArc:Make;HelloWorld:Make;Texture:Make;TextureTiled:Make;TextureScaled:Make;TextureRegion:Make;Screenshot:Make;Screenshake:Make;Entity:Make;EntityPolyPointCollision:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>
