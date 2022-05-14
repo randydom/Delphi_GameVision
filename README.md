@@ -186,6 +186,6 @@ https://user-images.githubusercontent.com/69952438/168428400-7de6adc5-4a34-45e4-
 
 <p align="center">
  <a href="https://www.embarcadero.com/products/delphi" target="_blank"><img src="media/delphi.png"></a><br/>
- <b>Made for Delphi</b>
+ ♥ <b>Made for Delphi</b>
 </p>
 
