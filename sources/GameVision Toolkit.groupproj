@@ -36,6 +36,9 @@
         <Projects Include="..\demos\AstroBlaster.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="..\examples\AudioPositional.dproj">
+            <Dependencies/>
+        </Projects>
     </ItemGroup>
     <ProjectExtensions>
         <Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -143,14 +146,23 @@
     <Target Name="AstroBlaster:Make">
         <MSBuild Projects="..\demos\AstroBlaster.dproj" Targets="Make"/>
     </Target>
+    <Target Name="AudioPositional">
+        <MSBuild Projects="..\examples\AudioPositional.dproj"/>
+    </Target>
+    <Target Name="AudioPositional:Clean">
+        <MSBuild Projects="..\examples\AudioPositional.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="AudioPositional:Make">
+        <MSBuild Projects="..\examples\AudioPositional.dproj" Targets="Make"/>
+    </Target>
     <Target Name="Build">
-        <CallTarget Targets="GVArc;HelloWorld;Texture;TextureTiled;TextureScaled;TextureRegion;Screenshot;Screenshake;Entity;EntityPolyPointCollision;AstroBlaster"/>
+        <CallTarget Targets="GVArc;HelloWorld;Texture;TextureTiled;TextureScaled;TextureRegion;Screenshot;Screenshake;Entity;EntityPolyPointCollision;AstroBlaster;AudioPositional"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="GVArc:Clean;HelloWorld:Clean;Texture:Clean;TextureTiled:Clean;TextureScaled:Clean;TextureRegion:Clean;Screenshot:Clean;Screenshake:Clean;Entity:Clean;EntityPolyPointCollision:Clean;AstroBlaster:Clean"/>
+        <CallTarget Targets="GVArc:Clean;HelloWorld:Clean;Texture:Clean;TextureTiled:Clean;TextureScaled:Clean;TextureRegion:Clean;Screenshot:Clean;Screenshake:Clean;Entity:Clean;EntityPolyPointCollision:Clean;AstroBlaster:Clean;AudioPositional:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="GVArc:Make;HelloWorld:Make;Texture:Make;TextureTiled:Make;TextureScaled:Make;TextureRegion:Make;Screenshot:Make;Screenshake:Make;Entity:Make;EntityPolyPointCollision:Make;AstroBlaster:Make"/>
+        <CallTarget Targets="GVArc:Make;HelloWorld:Make;Texture:Make;TextureTiled:Make;TextureScaled:Make;TextureRegion:Make;Screenshot:Make;Screenshake:Make;Entity:Make;EntityPolyPointCollision:Make;AstroBlaster:Make;AudioPositional:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>

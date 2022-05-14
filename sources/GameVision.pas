@@ -12672,7 +12672,7 @@ begin
   if FHandle = nil then Exit;
   FHWnd := al_get_win_window_handle(FHandle);
   SetWindowLong(FHwnd, GWL_STYLE, GetWindowLong(FHWnd, GWL_STYLE) and (not WS_MAXIMIZEBOX));
-  GV.Util.LoadDefaultIcon(al_get_win_window_handle(FHandle));
+  //GV.Util.LoadDefaultIcon(al_get_win_window_handle(FHandle));
   FWidth := aWidth;
   FHeight := aHeight;
   FScale := 1;
