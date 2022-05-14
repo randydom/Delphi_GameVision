@@ -5622,6 +5622,195 @@ type
     end;
 {$ENDREGION}
 
+{$REGION '  === CSFMLAUDIO ============================================================'}
+const
+  sfFalse = 0;
+  sfTrue = 1;
+
+type
+  TsfBool = Integer;
+
+  TsfTime = record
+    MicroSeconds: Int64;
+  end;
+
+  TsfVector3f = record
+    X, Y, Z: Single;
+  end;
+
+  TsfInputStreamReadFunc = function(Data: Pointer; Size: Int64; UserData: Pointer): Int64; cdecl;
+  TsfInputStreamSeekFunc = function(Position: Int64; UserData: Pointer): Int64; cdecl;
+  TsfInputStreamTellFunc = function(UserData: Pointer): Int64; cdecl;
+  TsfInputStreamGetSizeFunc = function(UserData: Pointer): Int64; cdecl;
+
+  PsfInputStream = ^TsfInputStream;
+  TsfInputStream = record
+    Read: TsfInputStreamReadFunc;
+    Seek: TsfInputStreamSeekFunc;
+    Tell: TsfInputStreamTellFunc;
+    GetSize: TsfInputStreamGetSizeFunc;
+    UserData: Pointer;
+  end;
+
+  PsfMusic = ^TsfMusic;
+  TsfMusic = record end;
+
+  PsfSound = ^TsfSound;
+  TsfSound = record end;
+
+  PsfSoundBuffer = ^TsfSoundBuffer;
+  TsfSoundBuffer = record end;
+
+  PsfSoundBufferRecorder = ^TsfSoundBufferRecorder;
+  TsfSoundBufferRecorder = record end;
+
+  PsfSoundRecorder = ^TsfSoundRecorder;
+  TsfSoundRecorder = record end;
+
+  PsfSoundStream = ^TsfSoundStream;
+  TsfSoundStream = record end;
+
+  TsfSoundStatus = (sfStopped, sfPaused, sfPlaying);
+
+  PsfSoundStreamChunk = ^TsfSoundStreamChunk;
+  TsfSoundStreamChunk = record
+    Samples: PSmallInt;
+    SampleCount: Cardinal;
+  end;
+
+  TsfSoundStreamGetDataCallback = function(Chunk: PsfSoundStreamChunk; UserData: Pointer): Boolean; cdecl;
+  TsfSoundStreamSeekCallback = procedure(Time: TsfTime; UserData: Pointer); cdecl;
+  TsfSoundRecorderStartCallback = function(UserData: Pointer): Boolean; cdecl;
+  TsfSoundRecorderProcessCallback = function(Data: PSmallInt; SampleFrames: NativeUInt; UserData: Pointer): Boolean; cdecl;
+  TsfSoundRecorderStopCallback = procedure(UserData: Pointer); cdecl;
+
+  TsfTimeSpan = record
+    offset: TsfTime;
+    length: TsfTime;
+  end;
+
+var
+  sfListener_setGlobalVolume: procedure(Volume: Single); cdecl;
+  sfListener_getGlobalVolume: function: Single; cdecl;
+  sfListener_setPosition: procedure(Position: TsfVector3f); cdecl;
+  sfListener_getPosition: function: TsfVector3f; cdecl;
+  sfListener_setDirection: procedure(Direction: TsfVector3f); cdecl;
+  sfListener_getDirection: function: TsfVector3f; cdecl;
+  sfListener_setUpVector: procedure(UpVector: TsfVector3f); cdecl;
+  sfListener_getUpVector: function: TsfVector3f; cdecl;
+  sfMusic_createFromFile: function(const FileName: PAnsiChar): PsfMusic; cdecl;
+  sfMusic_createFromMemory: function(const Data: Pointer; SizeInBytes: NativeUInt): PsfMusic; cdecl;
+  sfMusic_createFromStream: function(Stream: PsfInputStream): PsfMusic; cdecl;
+  sfMusic_destroy: procedure(Music: PsfMusic); cdecl;
+  sfMusic_setLoop: procedure(Music: PsfMusic; Loop: TsfBool); cdecl;
+  sfMusic_getLoop: function(const Music: PsfMusic): Integer; cdecl;
+  sfMusic_play: procedure(Music: PsfMusic); cdecl;
+  sfMusic_pause: procedure(Music: PsfMusic); cdecl;
+  sfMusic_stop: procedure(Music: PsfMusic); cdecl;
+  sfMusic_getChannelCount: function(const Music: PsfMusic): Cardinal; cdecl;
+  sfMusic_getSampleRate: function(const Music: PsfMusic): Cardinal; cdecl;
+  sfMusic_getStatus: function(const Music: PsfMusic): TsfSoundStatus; cdecl;
+  sfMusic_setPitch: procedure(Music: PsfMusic; Pitch: Single); cdecl;
+  sfMusic_setVolume: procedure(Music: PsfMusic; Volume: Single); cdecl;
+  sfMusic_setPosition: procedure(Music: PsfMusic; Position: TsfVector3f); cdecl;
+  sfMusic_setRelativeToListener: procedure(Music: PsfMusic; Relative: Integer); cdecl;
+  sfMusic_setMinDistance: procedure(Music: PsfMusic; Distance: Single); cdecl;
+  sfMusic_setAttenuation: procedure(Music: PsfMusic; Attenuation: Single); cdecl;
+  sfMusic_setPlayingOffset: procedure(Music: PsfMusic; TimeOffset: TsfTime); cdecl;
+  sfMusic_getPitch: function(const Music: PsfMusic): Single; cdecl;
+  sfMusic_getVolume: function(const Music: PsfMusic): Single; cdecl;
+  sfMusic_getPosition: function(const Music: PsfMusic): TsfVector3f; cdecl;
+  sfMusic_isRelativeToListener: function(const Music: PsfMusic): Integer; cdecl;
+  sfMusic_getMinDistance: function(const Music: PsfMusic): Single; cdecl;
+  sfMusic_getAttenuation: function(const Music: PsfMusic): Single; cdecl;
+  sfMusic_setLoopPoints: procedure(Music: PsfMusic; timePoints: TsfTimeSpan); cdecl;
+  sfMusic_getLoopPoints: function(const Music: PsfMusic): TsfTimeSpan; cdecl;
+  sfSoundStream_create: function(OnGetData: TsfSoundStreamGetDataCallback; OnSeek: TsfSoundStreamSeekCallback; ChannelCount, SampleRate: Cardinal; UserData: Pointer): PsfSoundStream; cdecl;
+  sfSoundStream_destroy: procedure(SoundStream: PsfSoundStream); cdecl;
+  sfSoundStream_play: procedure(SoundStream: PsfSoundStream); cdecl;
+  sfSoundStream_pause: procedure(SoundStream: PsfSoundStream); cdecl;
+  sfSoundStream_stop: procedure(SoundStream: PsfSoundStream); cdecl;
+  sfSoundStream_getStatus: function(const SoundStream: PsfSoundStream): TsfSoundStatus; cdecl;
+  sfSoundStream_getChannelCount: function(const SoundStream: PsfSoundStream): Cardinal; cdecl;
+  sfSoundStream_getSampleRate: function(const SoundStream: PsfSoundStream): Cardinal; cdecl;
+  sfSoundStream_setPitch: procedure(SoundStream: PsfSoundStream; Pitch: Single); cdecl;
+  sfSoundStream_setVolume: procedure(SoundStream: PsfSoundStream; Volume: Single); cdecl;
+  sfSoundStream_setPosition: procedure(SoundStream: PsfSoundStream; Position: TsfVector3f); cdecl;
+  sfSoundStream_setRelativeToListener: procedure(SoundStream: PsfSoundStream; Relative: Integer); cdecl;
+  sfSoundStream_setMinDistance: procedure(SoundStream: PsfSoundStream; Distance: Single); cdecl;
+  sfSoundStream_setAttenuation: procedure(SoundStream: PsfSoundStream; Attenuation: Single); cdecl;
+  sfSoundStream_setPlayingOffset: procedure(SoundStream: PsfSoundStream; TimeOffset: TsfTime); cdecl;
+  sfSoundStream_setLoop: procedure(SoundStream: PsfSoundStream; Loop: Integer); cdecl;
+  sfSoundStream_getPitch: function(const SoundStream: PsfSoundStream): Single; cdecl;
+  sfSoundStream_getVolume: function(const SoundStream: PsfSoundStream): Single; cdecl;
+  sfSoundStream_getPosition: function(const SoundStream: PsfSoundStream): TsfVector3f; cdecl;
+  sfSoundStream_isRelativeToListener: function(const SoundStream: PsfSoundStream): Integer; cdecl;
+  sfSoundStream_getMinDistance: function(const SoundStream: PsfSoundStream): Single; cdecl;
+  sfSoundStream_getAttenuation: function(const SoundStream: PsfSoundStream): Single; cdecl;
+  sfSoundStream_getLoop: function(const SoundStream: PsfSoundStream): Integer; cdecl;
+  sfSound_create: function: PsfSound; cdecl;
+  sfSound_copy: function(const Sound: PsfSound): PsfSound; cdecl;
+  sfSound_destroy: procedure(Sound: PsfSound); cdecl;
+  sfSound_play: procedure(Sound: PsfSound); cdecl;
+  sfSound_pause: procedure(Sound: PsfSound); cdecl;
+  sfSound_stop: procedure(Sound: PsfSound); cdecl;
+  sfSound_setBuffer: procedure(Sound: PsfSound; const Buffer: PsfSoundBuffer); cdecl;
+  sfSound_getBuffer: function(const Sound: PsfSound): PsfSoundBuffer; cdecl;
+  sfSound_setLoop: procedure(Sound: PsfSound; Loop: TsfBool); cdecl;
+  sfSound_getLoop: function(const Sound: PsfSound): Integer; cdecl;
+  sfSound_getStatus: function(const Sound: PsfSound): TsfSoundStatus; cdecl;
+  sfSound_setPitch: procedure(Sound: PsfSound; Pitch: Single); cdecl;
+  sfSound_setVolume: procedure(Sound: PsfSound; Volume: Single); cdecl;
+  sfSound_setPosition: procedure(Sound: PsfSound; Position: TsfVector3f); cdecl;
+  sfSound_setRelativeToListener: procedure(Sound: PsfSound; Relative: TsfBool); cdecl;
+  sfSound_setMinDistance: procedure(Sound: PsfSound; Distance: Single); cdecl;
+  sfSound_setAttenuation: procedure(Sound: PsfSound; Attenuation: Single); cdecl;
+  sfSound_setPlayingOffset: procedure(Sound: PsfSound; TimeOffset: TsfTime); cdecl;
+  sfSound_getPitch: function(const Sound: PsfSound): Single; cdecl;
+  sfSound_getVolume: function(const Sound: PsfSound): Single; cdecl;
+  sfSound_getPosition: function(const Sound: PsfSound): TsfVector3f; cdecl;
+  sfSound_isRelativeToListener: function(const Sound: PsfSound): Integer; cdecl;
+  sfSound_getMinDistance: function(const Sound: PsfSound): Single; cdecl;
+  sfSound_getAttenuation: function(const Sound: PsfSound): Single; cdecl;
+  sfSoundBuffer_createFromFile: function(const FileName: PAnsiChar): PsfSoundBuffer; cdecl;
+  sfSoundBuffer_createFromMemory: function(const Data: Pointer; SizeInBytes: NativeUInt): PsfSoundBuffer; cdecl;
+  sfSoundBuffer_createFromStream: function(Stream: PsfInputStream): PsfSoundBuffer; cdecl;
+  sfSoundBuffer_createFromSamples: function(const Samples: PSmallInt; SampleCount: UInt64; ChannelCount, SampleRate: Cardinal): PsfSoundBuffer; cdecl;
+  sfSoundBuffer_copy: function(const SoundBuffer: PsfSoundBuffer): PsfSoundBuffer; cdecl;
+  sfSoundBuffer_destroy: procedure(SoundBuffer: PsfSoundBuffer); cdecl;
+  sfSoundBuffer_saveToFile: function(const SoundBuffer: PsfSoundBuffer; const FileName: PAnsiChar): Integer; cdecl;
+  sfSoundBuffer_getSamples: function(const SoundBuffer: PsfSoundBuffer): PSmallInt; cdecl;
+  sfSoundBuffer_getSampleCount: function(const SoundBuffer: PsfSoundBuffer): NativeUInt; cdecl;
+  sfSoundBuffer_getSampleRate: function(const SoundBuffer: PsfSoundBuffer): Cardinal; cdecl;
+  sfSoundBuffer_getChannelCount: function(const SoundBuffer: PsfSoundBuffer): Cardinal; cdecl;
+  sfSoundBufferRecorder_create: function: PsfSoundBufferRecorder; cdecl;
+  sfSoundBufferRecorder_destroy: procedure(soundBufferRecorder: PsfSoundBufferRecorder); cdecl;
+  sfSoundBufferRecorder_start: function(soundBufferRecorder: PsfSoundBufferRecorder; SampleRate: Cardinal): Integer; cdecl;
+  sfSoundBufferRecorder_stop: procedure(soundBufferRecorder: PsfSoundBufferRecorder); cdecl;
+  sfSoundBufferRecorder_getSampleRate: function(const soundBufferRecorder: PsfSoundBufferRecorder): Cardinal; cdecl;
+  sfSoundBufferRecorder_getBuffer: function(const soundBufferRecorder: PsfSoundBufferRecorder): PsfSoundBuffer; cdecl;
+  sfSoundBufferRecorder_setDevice: function(SoundRecorder: PsfSoundBufferRecorder; const Name: PAnsiChar): Integer; cdecl;
+  sfSoundBufferRecorder_getDevice: function(SoundRecorder: PsfSoundBufferRecorder): PAnsiChar; cdecl;
+  sfSoundRecorder_create: function(OnStart: TsfSoundRecorderStartCallback; OnProcess: TsfSoundRecorderProcessCallback; OnStop: TsfSoundRecorderStopCallback; UserData: Pointer): PsfSoundRecorder; cdecl;
+  sfSoundRecorder_destroy: procedure(SoundRecorder: PsfSoundRecorder); cdecl;
+  sfSoundRecorder_start: function(SoundRecorder: PsfSoundRecorder; SampleRate: Cardinal): Integer; cdecl;
+  sfSoundRecorder_stop: procedure(SoundRecorder: PsfSoundRecorder); cdecl;
+  sfSoundRecorder_getSampleRate: function(const SoundRecorder: PsfSoundRecorder): Cardinal; cdecl;
+  sfSoundRecorder_isAvailable: function: Integer; cdecl;
+  sfSoundRecorder_setProcessingInterval: procedure(SoundRecorder: PsfSoundRecorder; Interval: TsfTime); cdecl;
+  sfSoundRecorder_getAvailableDevices: function(count: PNativeUInt): PPAnsiChar; cdecl;
+  sfSoundRecorder_getDefaultDevice: function: PAnsiChar; cdecl;
+  sfSoundRecorder_setDevice: function(SoundRecorder: PsfSoundRecorder; const Name: PAnsiChar): Integer; cdecl;
+  sfSoundRecorder_getDevice: function(SoundRecorder: PsfSoundRecorder): PAnsiChar; cdecl;
+  sfSoundRecorder_setChannelCount: function(SoundRecorder: PsfSoundRecorder; const ChannelCount: Cardinal): Integer; cdecl;
+  sfSoundRecorder_getChannelCount: function(const SoundRecorder: PsfSoundRecorder): Cardinal; cdecl;
+  sfMusic_getDuration: function(const Music: PsfMusic): TsfTime; cdecl;
+  sfMusic_getPlayingOffset: function(const Music: PsfMusic): TsfTime; cdecl;
+  sfSoundStream_getPlayingOffset: function(const SoundStream: PsfSoundStream): TsfTime; cdecl;
+  sfSound_getPlayingOffset: function(const Sound: PsfSound): TsfTime; cdecl;
+  sfSoundBuffer_getDuration: function(const SoundBuffer: PsfSoundBuffer): TsfTime; cdecl;
+{$ENDREGION}
+
 {$REGION '  === PASLIBS ==============================================================='}
 { Database }
 type
@@ -5961,10 +6150,10 @@ type
     property Count: Integer read FCount;
     constructor Create; virtual;
     destructor Destroy; override;
-    procedure Add(aObject: TGVObject);
-    procedure Remove(aObject: TGVObject; aDispose: Boolean);
+    procedure Add(aObject: TGVObject); virtual;
+    procedure Remove(aObject: TGVObject; aDispose: Boolean); virtual;
     procedure Clean; virtual;
-    procedure Clear(aAttrs: TGVObjectAttributeSet);
+    procedure Clear(aAttrs: TGVObjectAttributeSet); virtual;
   end;
 
 {  BUFFER ------------------------------------------------------------------- }
@@ -6205,6 +6394,11 @@ type
   TGVArchiveFile = class(TGVObject)
   protected
     FHandle: PALLEGRO_FILE;
+    FInputStream: TsfInputStream;
+    function InputStreamRead(aData: Pointer; aSize: Int64): Int64;
+    function InputStreamSeek(aPosition: Int64): Int64;
+    function InputStreamTell: Int64;
+    function InputStreamGetSize: Int64;
   public
     constructor Create; override;
     destructor Destroy; override;
@@ -6217,6 +6411,7 @@ type
     function Tell: UInt64;
     function Read(aBuffer: Pointer; aSize: UInt64): UInt64;
     function LastError: string;
+    function InputStream: PsfInputStream;
   end;
 
 { --- TEXTURE --------------------------------------------------------------- }
@@ -6678,66 +6873,103 @@ type
 { --- AUDIO ----------------------------------------------------------------- }
 
 const
-  AUDIO_PAN_LEFT     = -1.0;
-  AUDIO_PAN_CENTERED = 0.0;
-  AUDIO_PAN_RIGHT    = 1.0;
-  AUDIO_PAN_NONE     = -1000.0;
+  AUDIO_BUFFER_COUNT   = 256;
+  AUDIO_CHANNEL_COUNT   = 16;
+  AUDIO_DYNAMIC_CHANNEL = -1;
+  AUDIO_INVALID_INDEX   = -2;
 
   AUDIO_MAX_CHANNELS = 16;
 
 type
-  TGVMusic   = type Integer;
-  TGVSound   = type Integer;
-  TGVSoundId = type Integer;
+  TGVMusic        = type Integer;
+  TGVSound        = type Integer;
+  TGVSoundChannel = type Integer;
+
+  { TGVAudioStatus }
+  TGVAudioStatus = (Stopped, Paused, Playing);
 
   { TGVAudio }
   TGVAudio = class(TGVObject)
   protected
     type
-      { TMusic }
-      TMusic = record
-        Handle: PALLEGRO_AUDIO_STREAM;
+      { TMusicItem }
+      TMusicItem = record
+        MusicHandle: PsfMusic;
+        Size: Int64;
         Filename: string;
+        MusicFile: TGVArchiveFile;
       end;
-      { TSound }
-      TSound = record
-        Handle: PALLEGRO_SAMPLE;
+
+      { TAudioChannel }
+      TAudioChannel = record
+        Sound: PsfSound;
+        Reserved: Boolean;
+        Priority: Byte;
+      end;
+      { TAudioBuffer }
+      TAudioBuffer = record
+        Buffer: PsfSoundBuffer;
         Filename: string;
       end;
   protected
-    FId: Integer;
-    FMusicList: TDictionary<TGVMusic, TMusic>;
-    FSampleList: TDictionary<TGVSound, TSound>;
-    FSampleIdList: TDictionary<TGVSoundId, ALLEGRO_SAMPLE_ID>;
-    function GetID: Integer;
+    FMusicList: TList<TMusicItem>;
+    FBuffer: array [0 .. AUDIO_BUFFER_COUNT - 1] of TAudioBuffer;
+    FChannel: array [0 .. AUDIO_CHANNEL_COUNT - 1] of TAudioChannel;
+    FOpened: Boolean;
+    function TimeAsSeconds(aValue: Single): TsfTime;
+    function GetMusicItem(var aMusicItem: TMusicItem; aMusic: Integer): Boolean;
+    function AddMusicItem(var aMusicItem: TMusicItem): Integer;
+    function FindFreeBuffer(aFilename: string): Integer;
+    function FindFreeChannel: Integer;
+    procedure Open;
+    procedure Close;
+    procedure PlayMusic(aMusic: Integer); overload;
+    function  PlaySound(aChannel: Integer; aSound: Integer): Integer; overload;
   public
     constructor Create; override;
     destructor Destroy; override;
-    procedure Update;
     procedure Pause(aPause: Boolean);
-    procedure Clear;
-    function  LoadMusic(aArchive: TGVArchive; const aFilename: string): TGVMusic;
-    function  UnloadMusic(var aMusic: TGVMusic): Boolean;
+    procedure Reset;
+    function  LoadMusic(aArchive: TGVArchive; const aFilename: string): Integer;
+    procedure UnloadMusic(var aMusic: Integer);
     procedure UnloadAllMusic;
-    function  PlayMusic(aMusic: TGVMusic; aVolume: Single; aLoop: Boolean): Boolean;
-    function  StopMusic(aMusic: TGVMusic): Boolean;
-    procedure StopAllMusic;
-    function  GetMusicLooping(aMusic: TGVMusic): Boolean;
-    procedure SetMusicLooping(aMusic: TGVMusic; aLoop: Boolean);
-    function  GetMusicPlaying(aMusic: TGVMusic): Boolean;
-    procedure SetMusicPlaying(aMusic: TGVMusic; aPlay: Boolean);
-    procedure SetMusicVolume(aMusic: TGVMusic; aVolume: Single);
-    function  GetMusicVolume(aMusic: TGVMusic): Single;
-    procedure SeekMusic(aMusic: TGVMusic; aTime: Single);
-    procedure RewindMusic(aMusic: TGVMusic; aTime: Single);
-    function  ReserveSoundChannels(aCount: Integer): Boolean;
-    function  LoadSound(aArchive: TGVArchive; const aFilename: string): TGVSound;
-    procedure UnloadSound(var aSound: TGVSound);
-    procedure UnloadAllSounds;
-    function  PlaySound(aSound: TGVSound; aVolume: Single; aLoop: Boolean; aPan: Single=AUDIO_PAN_CENTERED; aSpeed: Single=1.0): TGVSoundId;
-    procedure StopSound(var aId: TGVSoundId);
-    procedure StopAllSounds;
-    function  SoundPlaying(aId: TGVSoundId): Boolean;
+    procedure PlayMusic(aMusic: Integer; aVolume: Single; aLoop: Boolean); overload;
+    procedure StopMusic(aMusic: Integer);
+    procedure PauseMusic(aMusic: Integer);
+    procedure PauseAllMusic(aPause: Boolean);
+    procedure SetMusicLoop(aMusic: Integer; aLoop: Boolean);
+    function  GetMusicLoop(aMusic: Integer): Boolean;
+    procedure SetMusicVolume(aMusic: Integer; aVolume: Single);
+    function  GetMusicVolume(aMusic: Integer): Single;
+    function  GetMusicStatus(aMusic: Integer): TGVAudioStatus;
+    procedure SetMusicOffset(aMusic: Integer; aSeconds: Single);
+    function  LoadSound(aArchive: TGVArchive; const aFilename: string): Integer;
+    procedure UnloadSound(aSound: Integer);
+    function  PlaySound(aChannel: Integer; aSound: Integer; aVolume: Single; aLoop: Boolean): Integer; overload;
+    procedure SetChannelReserved(aChannel: Integer; aReserve: Boolean);
+    function  GetChannelReserved(aChannel: Integer): Boolean;
+    procedure PauseChannel(aChannel: Integer; aPause: Boolean);
+    function  GetChannelStatus(aChannel: Integer): TGVAudioStatus;
+    procedure SetChannelVolume(aChannel: Integer; aVolume: Single);
+    function  GetChannelVolume(aChannel: Integer): Single;
+    procedure SetChannelLoop(aChannel: Integer; aLoop: Boolean);
+    function  GetChannelLoop(aChannel: Integer): Boolean;
+    procedure SetChannelPitch(aChannel: Integer; aPitch: Single);
+    function  GetChannelPitch(aChannel: Integer): Single;
+    procedure SetChannelPosition(aChannel: Integer; aX: Single; aY: Single);
+    procedure GetChannelPosition(aChannel: Integer; var aX: Single; var aY: Single);
+    procedure SetChannelMinDistance(aChannel: Integer; aDistance: Single);
+    function  GetChannelMinDistance(aChannel: Integer): Single;
+    procedure SetChannelRelativeToListener(aChannel: Integer; aRelative: Boolean);
+    function  GetChannelRelativeToListener(aChannel: Integer): Boolean;
+    procedure SetChannelAttenuation(aChannel: Integer; aAttenuation: Single);
+    function  GetChannelAttenuation(aChannel: Integer): Single;
+    procedure StopChannel(aChannel: Integer);
+    procedure StopAllChannels;
+    procedure SetListenerGlobalVolume(aVolume: Single);
+    function  GetListenerGlobalVolume: Single;
+    procedure SetListenerPosition(aX: Single; aY: Single);
+    procedure GetListenerPosition(var aX: Single; var aY: Single);
   end;
 
 { --- VIDEO ----------------------------------------------------------------- }
@@ -7234,6 +7466,105 @@ type
     function  CollidePolyPointPoint(var aPoint: TGVVector): Boolean;
   end;
 
+{ --- ACTOR ----------------------------------------------------------------- }
+type
+
+  { TGVActorList }
+  TGVActorList = class;
+
+  { TGVActorMessage }
+  PGVActorMessage = ^TGVActorMessage;
+  TGVActorMessage = record
+    Id: Integer;
+    Data: Pointer;
+    DataSize: Cardinal;
+  end;
+
+  { TGVActor }
+  TGVActor = class(TGVObject)
+  protected
+    FTerminated: Boolean;
+    FActorList: TGVActorList;
+    FCanCollide: Boolean;
+    FChildren: TGVActorList;
+  public
+    property Terminated: Boolean read FTerminated write FTerminated;
+    property Children: TGVActorList read FChildren write FChildren;
+    property ActorList: TGVActorList read FActorList write FActorList;
+    property CanCollide: Boolean read FCanCollide write FCanCollide;
+    constructor Create; override;
+    destructor Destroy; override;
+    procedure OnVisit(aSender: TGVActor; aEventId: Integer; var aDone: Boolean); virtual;
+    procedure OnUpdate(aDeltaTime: Double); virtual;
+    procedure OnRender; virtual;
+    function OnMessage(aMsg: PGVActorMessage): TGVActor; virtual;
+    procedure OnCollide(aActor: TGVActor; aHitPos: TGVVector); virtual;
+    function Collide(aActor: TGVActor; var aHitPos: TGVVector): Boolean; virtual;
+    function Overlap(aX, aY, aRadius, aShrinkFactor: Single): Boolean; overload; virtual;
+    function Overlap(aActor: TGVActor): Boolean; overload; virtual;
+  end;
+
+{ --- ACTORLIST ------------------------------------------------------------- }
+  { TGVActorList }
+  TGVActorList = class(TGVObjectList)
+  public
+    constructor Create; override;
+    destructor Destroy; override;
+    procedure Add(aObject: TGVObject); override;
+    procedure Remove(aObject: TGVObject; aDispose: Boolean); override;
+    procedure Clean; override;
+    procedure Clear(aAttrs: TGVObjectAttributeSet); override;
+    procedure ForEach(aSender: TGVActor; aAttrs: TGVObjectAttributeSet; aEventId: Integer; var aDone: Boolean);
+    procedure Update(aAttrs: TGVObjectAttributeSet; aDeltaTime: Double);
+    procedure Render(aAttrs: TGVObjectAttributeSet);
+    function SendMessage(aAttrs: TGVObjectAttributeSet; aMsg: PGVActorMessage; aBroadcast: Boolean): TGVActor;
+    procedure CheckCollision(aAttrs: TGVObjectAttributeSet; aActor: TGVActor);
+  end;
+
+{ --- ACTORSCENE ------------------------------------------------------------ }
+type
+  { TGVActorSceneEvent }
+  TGVActorSceneEvent = procedure(aSceneNum: Integer) of object;
+
+  { TGVActorScene }
+  TGVActorScene = class(TGVObject)
+  protected
+    FLists: array of TGVActorList;
+    FCount: Integer;
+    function GetList(aIndex: Integer): TGVActorList;
+    function GetCount: Integer;
+  public
+    property Lists[aIndex: Integer]: TGVActorList read GetList; default;
+    property Count: Integer read GetCount;
+    constructor Create; override;
+    destructor Destroy; override;
+    procedure Alloc(aNum: Integer);
+    procedure Dealloc;
+    procedure Clean(aIndex: Integer);
+    procedure Clear(aIndex: Integer; aAttrs: TGVObjectAttributeSet);
+    procedure ClearAll;
+    procedure Update(aAttrs: TGVObjectAttributeSet; aDeltaTime: Double);
+    procedure Render(aAttrs: TGVObjectAttributeSet; aBefore: TGVActorSceneEvent; aAfter: TGVActorSceneEvent);
+    function SendMessage(aAttrs: TGVObjectAttributeSet; aMsg: PGVActorMessage; aBroadcast: Boolean): TGVActor;
+  end;
+
+{ --- ENTITYACTOR ----------------------------------------------------------- }
+type
+  { TGVEntityActor }
+  TGVEntityActor = class(TGVActor)
+  protected
+    FEntity: TGVEntity;
+  public
+    property Entity: TGVEntity read FEntity;
+    constructor Create; override;
+    destructor Destroy; override;
+    procedure Init(aSprite: TGVSprite; aGroup: Integer); virtual;
+    function Collide(aActor: TGVActor; var aHitPos: TGVVector): Boolean; override;
+    function Overlap(aX, aY, aRadius, aShrinkFactor: Single): Boolean; override;
+    function Overlap(aActor: TGVActor): Boolean; override;
+    procedure OnRender; override;
+  end;
+
 { --- CUSTOMGAME ------------------------------------------------------------ }
 type
   { TGVSettings }
@@ -7257,6 +7588,11 @@ type
     HudPosX: Integer;
     HudPosY: Integer;
     HudLineSpace: Integer;
+
+    // scene
+    SceneCount: Integer;
+    SceneRenderAttr: TGVObjectAttributeSet;
+    SceneUpdateAttr: TGVObjectAttributeSet;
   end;
 
   { PGVSettings }
@@ -7315,6 +7651,7 @@ type
     FFont: TGVFont;
     FInputMap: TGVInputMap;
     FSprite: TGVSprite;
+    FScene: TGVActorScene;
     procedure UpdateTiming;
   public
     property Terminated: Boolean read FTerminated write FTerminated;
@@ -7327,6 +7664,7 @@ type
     property MouseDelta: TGVVector read FMouseDelta;
     property MousePressure: Single read FMousePressure;
     property Sprite: TGVSprite read FSprite;
+    property Scene: TGVActorScene read FScene;
     constructor Create; override;
     destructor Destroy; override;
     procedure OnPreStartup; virtual;
@@ -7354,6 +7692,8 @@ type
     procedure OnFinishedVideo(const aFilename: string); virtual;
     procedure OnSpeechWord(aFWord: string; aText: string); virtual;
     procedure OnScreenshot(const aFilename: string); virtual;
+    procedure OnBeforeRenderScene(aSceneNum: Integer); virtual;
+    procedure OnAfterRenderScene(aSceneNum: Integer); virtual;
     function  GetTime: Double;
     procedure ResetTiming(aSpeed: Single=0; aFixedSpeed: Single=0);
     procedure SetUpdateSpeed(aSpeed: Single);
@@ -9090,6 +9430,133 @@ begin
 end;
 {$ENDREGION}
 
+{$REGION '  === CSFMLAUDIO ============================================================'}
+procedure GetCSFMLAudioExports(aDLLHandle: THandle);
+begin
+  if aDLLHandle = 0 then Exit;
+  sfListener_getDirection := GetProcAddress(aDLLHandle, 'sfListener_getDirection');
+  sfListener_getGlobalVolume := GetProcAddress(aDLLHandle, 'sfListener_getGlobalVolume');
+  sfListener_getPosition := GetProcAddress(aDLLHandle, 'sfListener_getPosition');
+  sfListener_getUpVector := GetProcAddress(aDLLHandle, 'sfListener_getUpVector');
+  sfListener_setDirection := GetProcAddress(aDLLHandle, 'sfListener_setDirection');
+  sfListener_setGlobalVolume := GetProcAddress(aDLLHandle, 'sfListener_setGlobalVolume');
+  sfListener_setPosition := GetProcAddress(aDLLHandle, 'sfListener_setPosition');
+  sfListener_setUpVector := GetProcAddress(aDLLHandle, 'sfListener_setUpVector');
+  sfMusic_createFromFile := GetProcAddress(aDLLHandle, 'sfMusic_createFromFile');
+  sfMusic_createFromMemory := GetProcAddress(aDLLHandle, 'sfMusic_createFromMemory');
+  sfMusic_createFromStream := GetProcAddress(aDLLHandle, 'sfMusic_createFromStream');
+  sfMusic_destroy := GetProcAddress(aDLLHandle, 'sfMusic_destroy');
+  sfMusic_getAttenuation := GetProcAddress(aDLLHandle, 'sfMusic_getAttenuation');
+  sfMusic_getChannelCount := GetProcAddress(aDLLHandle, 'sfMusic_getChannelCount');
+  sfMusic_getDuration := GetProcAddress(aDLLHandle, 'sfMusic_getDuration');
+  sfMusic_getLoop := GetProcAddress(aDLLHandle, 'sfMusic_getLoop');
+  sfMusic_getLoopPoints := GetProcAddress(aDLLHandle, 'sfMusic_getLoopPoints');
+  sfMusic_getMinDistance := GetProcAddress(aDLLHandle, 'sfMusic_getMinDistance');
+  sfMusic_getPitch := GetProcAddress(aDLLHandle, 'sfMusic_getPitch');
+  sfMusic_getPlayingOffset := GetProcAddress(aDLLHandle, 'sfMusic_getPlayingOffset');
+  sfMusic_getPosition := GetProcAddress(aDLLHandle, 'sfMusic_getPosition');
+  sfMusic_getSampleRate := GetProcAddress(aDLLHandle, 'sfMusic_getSampleRate');
+  sfMusic_getStatus := GetProcAddress(aDLLHandle, 'sfMusic_getStatus');
+  sfMusic_getVolume := GetProcAddress(aDLLHandle, 'sfMusic_getVolume');
+  sfMusic_isRelativeToListener := GetProcAddress(aDLLHandle, 'sfMusic_isRelativeToListener');
+  sfMusic_pause := GetProcAddress(aDLLHandle, 'sfMusic_pause');
+  sfMusic_play := GetProcAddress(aDLLHandle, 'sfMusic_play');
+  sfMusic_setAttenuation := GetProcAddress(aDLLHandle, 'sfMusic_setAttenuation');
+  sfMusic_setLoop := GetProcAddress(aDLLHandle, 'sfMusic_setLoop');
+  sfMusic_setLoopPoints := GetProcAddress(aDLLHandle, 'sfMusic_setLoopPoints');
+  sfMusic_setMinDistance := GetProcAddress(aDLLHandle, 'sfMusic_setMinDistance');
+  sfMusic_setPitch := GetProcAddress(aDLLHandle, 'sfMusic_setPitch');
+  sfMusic_setPlayingOffset := GetProcAddress(aDLLHandle, 'sfMusic_setPlayingOffset');
+  sfMusic_setPosition := GetProcAddress(aDLLHandle, 'sfMusic_setPosition');
+  sfMusic_setRelativeToListener := GetProcAddress(aDLLHandle, 'sfMusic_setRelativeToListener');
+  sfMusic_setVolume := GetProcAddress(aDLLHandle, 'sfMusic_setVolume');
+  sfMusic_stop := GetProcAddress(aDLLHandle, 'sfMusic_stop');
+  sfSoundBufferRecorder_create := GetProcAddress(aDLLHandle, 'sfSoundBufferRecorder_create');
+  sfSoundBufferRecorder_destroy := GetProcAddress(aDLLHandle, 'sfSoundBufferRecorder_destroy');
+  sfSoundBufferRecorder_getBuffer := GetProcAddress(aDLLHandle, 'sfSoundBufferRecorder_getBuffer');
+  sfSoundBufferRecorder_getDevice := GetProcAddress(aDLLHandle, 'sfSoundBufferRecorder_getDevice');
+  sfSoundBufferRecorder_getSampleRate := GetProcAddress(aDLLHandle, 'sfSoundBufferRecorder_getSampleRate');
+  sfSoundBufferRecorder_setDevice := GetProcAddress(aDLLHandle, 'sfSoundBufferRecorder_setDevice');
+  sfSoundBufferRecorder_start := GetProcAddress(aDLLHandle, 'sfSoundBufferRecorder_start');
+  sfSoundBufferRecorder_stop := GetProcAddress(aDLLHandle, 'sfSoundBufferRecorder_stop');
+  sfSoundBuffer_copy := GetProcAddress(aDLLHandle, 'sfSoundBuffer_copy');
+  sfSoundBuffer_createFromFile := GetProcAddress(aDLLHandle, 'sfSoundBuffer_createFromFile');
+  sfSoundBuffer_createFromMemory := GetProcAddress(aDLLHandle, 'sfSoundBuffer_createFromMemory');
+  sfSoundBuffer_createFromSamples := GetProcAddress(aDLLHandle, 'sfSoundBuffer_createFromSamples');
+  sfSoundBuffer_createFromStream := GetProcAddress(aDLLHandle, 'sfSoundBuffer_createFromStream');
+  sfSoundBuffer_destroy := GetProcAddress(aDLLHandle, 'sfSoundBuffer_destroy');
+  sfSoundBuffer_getChannelCount := GetProcAddress(aDLLHandle, 'sfSoundBuffer_getChannelCount');
+  sfSoundBuffer_getDuration := GetProcAddress(aDLLHandle, 'sfSoundBuffer_getDuration');
+  sfSoundBuffer_getSampleCount := GetProcAddress(aDLLHandle, 'sfSoundBuffer_getSampleCount');
+  sfSoundBuffer_getSampleRate := GetProcAddress(aDLLHandle, 'sfSoundBuffer_getSampleRate');
+  sfSoundBuffer_getSamples := GetProcAddress(aDLLHandle, 'sfSoundBuffer_getSamples');
+  sfSoundBuffer_saveToFile := GetProcAddress(aDLLHandle, 'sfSoundBuffer_saveToFile');
+  sfSoundRecorder_create := GetProcAddress(aDLLHandle, 'sfSoundRecorder_create');
+  sfSoundRecorder_destroy := GetProcAddress(aDLLHandle, 'sfSoundRecorder_destroy');
+  sfSoundRecorder_getAvailableDevices := GetProcAddress(aDLLHandle, 'sfSoundRecorder_getAvailableDevices');
+  sfSoundRecorder_getChannelCount := GetProcAddress(aDLLHandle, 'sfSoundRecorder_getChannelCount');
+  sfSoundRecorder_getDefaultDevice := GetProcAddress(aDLLHandle, 'sfSoundRecorder_getDefaultDevice');
+  sfSoundRecorder_getDevice := GetProcAddress(aDLLHandle, 'sfSoundRecorder_getDevice');
+  sfSoundRecorder_getSampleRate := GetProcAddress(aDLLHandle, 'sfSoundRecorder_getSampleRate');
+  sfSoundRecorder_isAvailable := GetProcAddress(aDLLHandle, 'sfSoundRecorder_isAvailable');
+  sfSoundRecorder_setChannelCount := GetProcAddress(aDLLHandle, 'sfSoundRecorder_setChannelCount');
+  sfSoundRecorder_setDevice := GetProcAddress(aDLLHandle, 'sfSoundRecorder_setDevice');
+  sfSoundRecorder_setProcessingInterval := GetProcAddress(aDLLHandle, 'sfSoundRecorder_setProcessingInterval');
+  sfSoundRecorder_start := GetProcAddress(aDLLHandle, 'sfSoundRecorder_start');
+  sfSoundRecorder_stop := GetProcAddress(aDLLHandle, 'sfSoundRecorder_stop');
+  sfSoundStream_create := GetProcAddress(aDLLHandle, 'sfSoundStream_create');
+  sfSoundStream_destroy := GetProcAddress(aDLLHandle, 'sfSoundStream_destroy');
+  sfSoundStream_getAttenuation := GetProcAddress(aDLLHandle, 'sfSoundStream_getAttenuation');
+  sfSoundStream_getChannelCount := GetProcAddress(aDLLHandle, 'sfSoundStream_getChannelCount');
+  sfSoundStream_getLoop := GetProcAddress(aDLLHandle, 'sfSoundStream_getLoop');
+  sfSoundStream_getMinDistance := GetProcAddress(aDLLHandle, 'sfSoundStream_getMinDistance');
+  sfSoundStream_getPitch := GetProcAddress(aDLLHandle, 'sfSoundStream_getPitch');
+  sfSoundStream_getPlayingOffset := GetProcAddress(aDLLHandle, 'sfSoundStream_getPlayingOffset');
+  sfSoundStream_getPosition := GetProcAddress(aDLLHandle, 'sfSoundStream_getPosition');
+  sfSoundStream_getSampleRate := GetProcAddress(aDLLHandle, 'sfSoundStream_getSampleRate');
+  sfSoundStream_getStatus := GetProcAddress(aDLLHandle, 'sfSoundStream_getStatus');
+  sfSoundStream_getVolume := GetProcAddress(aDLLHandle, 'sfSoundStream_getVolume');
+  sfSoundStream_isRelativeToListener := GetProcAddress(aDLLHandle, 'sfSoundStream_isRelativeToListener');
+  sfSoundStream_pause := GetProcAddress(aDLLHandle, 'sfSoundStream_pause');
+  sfSoundStream_play := GetProcAddress(aDLLHandle, 'sfSoundStream_play');
+  sfSoundStream_setAttenuation := GetProcAddress(aDLLHandle, 'sfSoundStream_setAttenuation');
+  sfSoundStream_setLoop := GetProcAddress(aDLLHandle, 'sfSoundStream_setLoop');
+  sfSoundStream_setMinDistance := GetProcAddress(aDLLHandle, 'sfSoundStream_setMinDistance');
+  sfSoundStream_setPitch := GetProcAddress(aDLLHandle, 'sfSoundStream_setPitch');
+  sfSoundStream_setPlayingOffset := GetProcAddress(aDLLHandle, 'sfSoundStream_setPlayingOffset');
+  sfSoundStream_setPosition := GetProcAddress(aDLLHandle, 'sfSoundStream_setPosition');
+  sfSoundStream_setRelativeToListener := GetProcAddress(aDLLHandle, 'sfSoundStream_setRelativeToListener');
+  sfSoundStream_setVolume := GetProcAddress(aDLLHandle, 'sfSoundStream_setVolume');
+  sfSoundStream_stop := GetProcAddress(aDLLHandle, 'sfSoundStream_stop');
+  sfSound_copy := GetProcAddress(aDLLHandle, 'sfSound_copy');
+  sfSound_create := GetProcAddress(aDLLHandle, 'sfSound_create');
+  sfSound_destroy := GetProcAddress(aDLLHandle, 'sfSound_destroy');
+  sfSound_getAttenuation := GetProcAddress(aDLLHandle, 'sfSound_getAttenuation');
+  sfSound_getBuffer := GetProcAddress(aDLLHandle, 'sfSound_getBuffer');
+  sfSound_getLoop := GetProcAddress(aDLLHandle, 'sfSound_getLoop');
+  sfSound_getMinDistance := GetProcAddress(aDLLHandle, 'sfSound_getMinDistance');
+  sfSound_getPitch := GetProcAddress(aDLLHandle, 'sfSound_getPitch');
+  sfSound_getPlayingOffset := GetProcAddress(aDLLHandle, 'sfSound_getPlayingOffset');
+  sfSound_getPosition := GetProcAddress(aDLLHandle, 'sfSound_getPosition');
+  sfSound_getStatus := GetProcAddress(aDLLHandle, 'sfSound_getStatus');
+  sfSound_getVolume := GetProcAddress(aDLLHandle, 'sfSound_getVolume');
+  sfSound_isRelativeToListener := GetProcAddress(aDLLHandle, 'sfSound_isRelativeToListener');
+  sfSound_pause := GetProcAddress(aDLLHandle, 'sfSound_pause');
+  sfSound_play := GetProcAddress(aDLLHandle, 'sfSound_play');
+  sfSound_setAttenuation := GetProcAddress(aDLLHandle, 'sfSound_setAttenuation');
+  sfSound_setBuffer := GetProcAddress(aDLLHandle, 'sfSound_setBuffer');
+  sfSound_setLoop := GetProcAddress(aDLLHandle, 'sfSound_setLoop');
+  sfSound_setMinDistance := GetProcAddress(aDLLHandle, 'sfSound_setMinDistance');
+  sfSound_setPitch := GetProcAddress(aDLLHandle, 'sfSound_setPitch');
+  sfSound_setPlayingOffset := GetProcAddress(aDLLHandle, 'sfSound_setPlayingOffset');
+  sfSound_setPosition := GetProcAddress(aDLLHandle, 'sfSound_setPosition');
+  sfSound_setRelativeToListener := GetProcAddress(aDLLHandle, 'sfSound_setRelativeToListener');
+  sfSound_setVolume := GetProcAddress(aDLLHandle, 'sfSound_setVolume');
+  sfSound_stop := GetProcAddress(aDLLHandle, 'sfSound_stop');
+
+end;
+{$ENDREGION}
+
 {$REGION '  === PASLIBS ==============================================================='}
 procedure GetPasLibsExports(aDLLHandle: THandle);
 begin
@@ -9586,63 +10053,63 @@ end;
 
 procedure TGVObjectList.Clean;
 var
-  LPrev: TGVObject;
+  LObj: TGVObject;
   LNext: TGVObject;
 begin
   // get pointer to head
-  LPrev := FHead;
+  LObj := FHead;
 
   // exit if list is empty
-  if LPrev = nil then
+  if LObj = nil then
     Exit;
 
   repeat
     // save pointer to next object
-    LNext := LPrev.Next;
+    LNext := LObj.Next;
 
-    Remove(LPrev, True);
+    Remove(LObj, True);
 
     // get pointer to next object
-    LPrev := LNext;
+    LObj := LNext;
 
-  until LPrev = nil;
+  until LObj = nil;
 end;
 
 procedure TGVObjectList.Clear(aAttrs: TGVObjectAttributeSet);
 var
-  LPrev: TGVObject;
+  LObj: TGVObject;
   LNext: TGVObject;
   LNoAttrs: Boolean;
 begin
   // get pointer to head
-  LPrev := FHead;
+  LObj := FHead;
 
   // exit if list is empty
-  if LPrev = nil then Exit;
+  if LObj = nil then Exit;
 
   // check if we should check for attrs
   LNoAttrs := Boolean(aAttrs = []);
 
   repeat
     // save pointer to next object
-    LNext := LPrev.Next;
+    LNext := LObj.Next;
 
     if LNoAttrs then
       begin
-        Remove(LPrev, True);
+        Remove(LObj, True);
       end
     else
       begin
-        if LPrev.AttributesAreSet(aAttrs) then
+        if LObj.AttributesAreSet(aAttrs) then
         begin
-          Remove(LPrev, True);
+          Remove(LObj, True);
         end;
       end;
 
     // get pointer to next object
-    LPrev := LNext;
+    LObj := LNext;
 
-  until LPrev = nil;
+  until LObj = nil;
 end;
 
 { --- BUFFER ---------------------------------------------------------------- }
@@ -11541,10 +12008,55 @@ end;
 
 { --- ARCHIVEFILE ----------------------------------------------------------- }
 { TGVArchiveFile }
+function TArchiveFile_InputStreamRead(aData: Pointer; aSize: Int64; aUserData: Pointer): Int64; cdecl;
+begin
+  Result := TGVArchiveFile(aUserData).InputStreamRead(aData, aSize);
+end;
+
+function TArchiveFile_InputStreamSeek(aPosition: Int64; aUserData: Pointer): Int64; cdecl;
+begin
+  Result := TGVArchiveFile(aUserData).InputStreamSeek(aPosition);
+end;
+
+function TArchiveFile_InputStreamTell(aUserData: Pointer): Int64; cdecl;
+begin
+  Result := TGVArchiveFile(aUserData).InputStreamTell;
+end;
+
+function TArchiveFile_InputStreamGetSize(aUserData: Pointer): Int64; cdecl;
+begin
+  Result := TGVArchiveFile(aUserData).InputStreamGetSize;
+end;
+
+function TGVArchiveFile.InputStreamRead(aData: Pointer; aSize: Int64): Int64;
+begin
+  Result := Read(aData, aSize);
+end;
+
+function TGVArchiveFile.InputStreamSeek(aPosition: Int64): Int64;
+begin
+  Result := Seek(aPosition, TGVSeek.AtStart);
+end;
+
+function TGVArchiveFile.InputStreamTell: Int64;
+begin
+  Result := Tell;
+end;
+
+function TGVArchiveFile.InputStreamGetSize: Int64;
+begin
+  Result := self.Size;
+end;
+
 constructor TGVArchiveFile.Create;
 begin
   inherited;
   FHandle := nil;
+  FInputStream.read := nil;
+  FINputStream.seek := nil;
+  FINputStream.tell := nil;
+  FInputStream.getSize := nil;
+  FInputStream.userData := nil;
 end;
 
 destructor TGVArchiveFile.Destroy;
@@ -11568,6 +12080,12 @@ begin
   if LHandle = nil then Exit;
   FHandle := LHandle;
   Result := IsOpen;
+
+  FInputStream.read := TArchiveFile_InputStreamRead;
+  FINputStream.seek := TArchiveFile_InputStreamSeek;
+  FINputStream.tell := TArchiveFile_InputStreamTell;
+  FInputStream.getSize := TArchiveFile_InputStreamGetSize;
+  FInputStream.userData := Self;
 end;
 
 function TGVArchiveFile.Close: Boolean;
@@ -11578,6 +12096,11 @@ begin
   if Result then
   begin
     FHandle := nil;
+    FInputStream.read := nil;
+    FINputStream.seek := nil;
+    FINputStream.tell := nil;
+    FInputStream.getSize := nil;
+    FInputStream.userData := nil;
   end;
 end;
 
@@ -11634,6 +12157,11 @@ begin
   Result := '';
   if not IsOpen then Exit;
   Result := string(al_ferrmsg(FHandle));
+end;
+
+function TGVArchiveFile.InputStream: PsfInputStream;
+begin
+  Result := @FInputStream;
 end;
 
 { --- TEXTURE --------------------------------------------------------------- }
@@ -13195,409 +13723,805 @@ end;
 
 { --- AUDIO ----------------------------------------------------------------- }
 { TGVAudio }
-function TGVAudio.GetID: Integer;
+function TGVAudio.TimeAsSeconds(aValue: Single): TsfTime;
 begin
-  Inc(FId);
-  Result := FId;
+  Result.MicroSeconds := Round(aValue * 1000000);
+end;
+
+function TGVAudio.GetMusicItem(var aMusicItem: TMusicItem; aMusic: Integer): Boolean;
+begin
+  // assume false
+  Result := False;
+
+  // check for valid music id
+  if (aMusic < 0) or (aMusic > FMusicList.Count-1) then Exit;
+
+  // get item
+  aMusicItem := FMusicList.Items[aMusic];
+
+  // check if valid
+  if aMusicItem.MusicHandle = nil then
+    Result := False
+  else
+    // return true
+    Result := True;
+end;
+
+function TGVAudio.AddMusicItem(var aMusicItem: TMusicItem): Integer;
+var
+  LIndex: Integer;
+  LItem: TMusicItem;
+begin
+  Result := -1;
+  for LIndex := 0 to FMusicList.Count-1 do
+  begin
+    LItem := FMusicList.Items[LIndex];
+    if LItem.MusicHandle = nil then
+    begin
+      FMusicList.Items[LIndex] := aMusicItem;
+      Result := LIndex;
+      Exit;
+    end;
+  end;
+
+  //if LItem.MusicHandle <> nil then
+  if Result = -1 then
+  begin
+    Result := FMusicList.Add(aMusicItem);
+  end;
+end;
+
+function TGVAudio.FindFreeBuffer(aFilename: string): Integer;
+var
+  LI: Integer;
+begin
+  Result := AUDIO_INVALID_INDEX;
+  for LI := 0 to AUDIO_BUFFER_COUNT - 1 do
+  begin
+    if FBuffer[LI].Filename = aFilename then
+    begin
+      Exit;
+    end;
+
+    if FBuffer[LI].Buffer = nil then
+    begin
+      Result := LI;
+      Break;
+    end;
+  end;
+end;
+
+function TGVAudio.FindFreeChannel: Integer;
+var
+  LI: Integer;
+begin
+  Result := AUDIO_INVALID_INDEX;
+  for LI := 0 to AUDIO_CHANNEL_COUNT - 1 do
+  begin
+    if sfSound_getStatus(FChannel[LI].Sound) =   TsfSoundStatus.sfStopped then
+    begin
+      if not FChannel[LI].Reserved then
+      begin
+        Result := LI;
+        Break;
+      end;
+    end;
+  end;
+end;
+
+procedure TGVAudio.Open;
+var
+  LI: Integer;
+  LVec: TsfVector3f;
+begin
+  if FOpened then Exit;
+
+  //FillChar(FBuffer, SizeOf(FBuffer), 0);
+  //FillChar(FChannel, SizeOf(FChannel), 0);
+  FOpened := False;
+
+  // init music list
+  FMusicList := TList<TMusicItem>.Create;
+
+  // init channels
+  for LI := 0 to AUDIO_CHANNEL_COUNT - 1 do
+  begin
+    FChannel[LI].Sound := sfSound_create;
+    FChannel[LI].Reserved := False;
+    FChannel[LI].Priority := 0;
+  end;
+
+  // init buffers
+  for LI := 0 to AUDIO_BUFFER_COUNT - 1 do
+  begin
+    FBuffer[LI].Buffer := nil;
+    FBuffer[LI].Filename := '';
+  end;
+
+  sfListener_setGlobalVolume(100);
+
+  LVec.X := 0; LVec.Y := 0; LVec.Z := 0;
+  sfListener_setPosition(LVec);
+
+  LVec.X := 0; LVec.Y := 0; LVec.Z := -1;
+  sfListener_setDirection(LVec);
+
+  LVec.X := 0; LVec.Y := 1; LVec.Z := 0;
+  sfListener_setUpVector(LVec);
+
+  FOpened := True;
+
+  GV.Logger.Log('Initialized %s Subsystem', ['Audio']);
+end;
+
+procedure TGVAudio.Close;
+var
+  LI: Integer;
+begin
+  if not FOpened then Exit;
+
+  // shutdown music
+  UnloadAllMusic;
+  FreeAndNil(FMusicList);
+
+  // shutdown channels
+  for LI := 0 to AUDIO_CHANNEL_COUNT - 1 do
+  begin
+    if FChannel[LI].Sound <> nil then
+    begin
+      sfSound_destroy(FChannel[LI].Sound);
+      FChannel[LI].Reserved := False;
+      FChannel[LI].Priority := 0;
+      FChannel[LI].Sound := nil;
+    end;
+  end;
+
+  // shutdown buffers
+  for LI := 0 to AUDIO_BUFFER_COUNT - 1 do
+  begin
+    if FBuffer[LI].Buffer <> nil then
+    begin
+      sfSoundBuffer_destroy(FBuffer[LI].Buffer);
+      FBuffer[LI].Buffer := nil;
+      FBuffer[LI].Filename := '';
+    end;
+  end;
+
+  //FillChar(FBuffer, SizeOf(FBuffer), 0);
+  //FillChar(FChannel, SizeOf(FChannel), 0);
+  FOpened := False;
+
+  GV.Logger.Log('Shutdown %s Subsystem', ['Audio']);
+end;
+
+procedure TGVAudio.PlayMusic(aMusic: Integer);
+var
+  LItem: TMusicItem;
+begin
+  if not FOpened then Exit;
+
+  // check for valid music id
+  if not GetMusicItem(LItem, aMusic) then Exit;
+
+  // play music
+  sfMusic_play(LItem.MusicHandle);
+end;
+
+function  TGVAudio.PlaySound(aChannel: Integer; aSound: Integer): Integer;
+var
+  LI: Integer;
+  LVec: TsfVector3f;
+begin
+  Result := AUDIO_INVALID_INDEX;
+  if not FOpened then Exit;
+
+  // check if sound is in range
+  if (aSound < 0) or (aSound > AUDIO_BUFFER_COUNT - 1) then Exit;
+
+  // check if channel is in range
+  LI := aChannel;
+  if LI = AUDIO_DYNAMIC_CHANNEL then LI := FindFreeChannel
+  else if (LI < 0) or (LI > AUDIO_CHANNEL_COUNT - 1) then Exit;
+
+  // play sound
+  sfSound_setBuffer(FChannel[LI].Sound, FBuffer[aSound].Buffer);
+  sfSound_play(FChannel[LI].Sound);
+
+  sfSound_setLoop(FChannel[LI].Sound, Ord(False));
+  sfSound_setPitch(FChannel[LI].Sound, 1);
+  sfSound_setVolume(FChannel[LI].Sound, 100);
+
+  LVec.X := 0; LVec.Y := 0; LVec.Z := 0;
+  sfSound_setPosition(FChannel[LI].Sound, LVec);
+
+  sfSound_setRelativeToListener(FChannel[LI].Sound, Ord(False));
+  sfSound_setMinDistance(FChannel[LI].Sound, 1);
+  sfSound_setAttenuation(FChannel[LI].Sound, 0);
+
+  Result := LI;
 end;
 
 constructor TGVAudio.Create;
 begin
   inherited;
-  FMusicList := TDictionary<TGVMusic, TMusic>.Create;
-  FSampleList := TDictionary<TGVSound, TSound>.Create;
-  FSampleIdList := TDictionary<TGVSoundId, ALLEGRO_SAMPLE_ID>.Create;
-  ReserveSoundChannels(AUDIO_MAX_CHANNELS);
+  Open;
 end;
 
 destructor TGVAudio.Destroy;
 begin
-  Clear;
-  FreeAndNil(FSAmpleIdList);
-  FreeAndNil(FSampleList);
-  FreeAndNil(FMusicList);
+  Close;
   inherited;
 end;
 
-procedure TGVAudio.Update;
-var
-  LSoundId: TGVSoundId;
-  LTrim: Boolean;
-begin
-  // check if sounds playing
-  LTrim := False;
-  for LSoundId in FSampleIdList.Keys do
-  begin
-    if not SoundPlaying(LSoundId) then
-    begin
-      FSampleIdList.Remove(LSoundId);
-      LTrim := True;
-    end;
-  end;
-  if LTrim then
-    FSampleIdList.TrimExcess;
-end;
-
 procedure TGVAudio.Pause(aPause: Boolean);
-begin
-  if not al_is_audio_installed then Exit;
-  al_set_mixer_playing(GV.Mixer, not aPause);
-end;
-
-procedure TGVAudio.Clear;
-begin
-  UnloadAllSounds;
-  UnloadAllMusic;
-end;
-
-function  TGVAudio.LoadMusic(aArchive: TGVArchive; const aFilename: string): TGVMusic;
 var
-  LMarshaller: TMarshaller;
-  LFilename: string;
-  LMusic: TMusic;
+  LI: Integer;
 begin
-  Result := GV_ID_NIL;
-  if not al_is_audio_installed then Exit;
+  if not FOpened then Exit;
+
+  PauseAllMusic(aPause);
+
+  // pause channel
+  for LI := 0 to AUDIO_CHANNEL_COUNT - 1 do
+  begin
+    PauseChannel(LI, aPause);
+  end;
+end;
+
+procedure TGVAudio.Reset;
+begin
+end;
+
+function  TGVAudio.LoadMusic(aArchive: TGVArchive; const aFilename: string): Integer;
+var
+  LItem: TMusicItem;
+  LArchiveFile: TGVArchiveFile;
+begin
+  Result := -1;
+  if not FOpened then Exit;
   if aFilename.IsEmpty then Exit;
 
   if aArchive <> nil then
     begin
       if not aArchive.IsOpen then Exit;
       if not aArchive.FileExist(aFilename) then Exit;
-      LFilename := string(aArchive.GetPasswordFilename(aFilename));
+      LArchiveFile := aArchive.OpenFile(aFilename);
+      if LArchiveFile = nil then Exit;
     end
   else
     begin
       if not TFile.Exists(aFilename) then Exit;
-      LFilename := aFilename;
+      LArchiveFile := TGVArchiveFile.Create;
+      if LArchiveFile = nil then Exit;
+      if not LArchiveFile.Open(nil, aFilename) then
+      begin
+        FreeAndNil(LArchiveFile);
+        Exit;
+      end;
     end;
 
-  if aArchive = nil then GV.SetFileSandBoxed(False);
-  LMusic.Handle := al_load_audio_stream(LMarshaller.AsUtf8(LFilename).ToPointer, 4, 2048);
-  if aArchive = nil then GV.SetFileSandBoxed(True);
+  LItem.Filename := aFilename;
+  LItem.Size := LArchiveFile.Size;
+  LItem.MusicHandle := sfMusic_createFromStream(LArchiveFile.InputStream);
+  if LItem.MusicHandle = nil then
+  begin
+    FreeAndNil(LArchiveFile);
+    GV.Logger.Log('Failed to load music file: %s', [aFilename]);
+    Exit;
+  end;
+  LItem.MusicFile := LArchiveFile;
 
-  if LMusic.Handle = nil then Exit;
+  Result := AddMusicItem(LItem);
 
-  al_set_audio_stream_playmode(LMusic.Handle, ALLEGRO_PLAYMODE_ONCE);
-  al_attach_audio_stream_to_mixer(LMusic.Handle, GV.Mixer);
-  al_set_audio_stream_playing(LMusic.Handle, False);
-
-  Result := GetId;
-  LMusic.Filename := aFilename;
-  FMusicList.Add(Result, LMusic);
+  GV.Logger.Log('Sucessfully loaded music "%s"', [aFilename]);
 end;
 
-function TGVAudio.UnloadMusic(var aMusic: TGVMusic): Boolean;
+procedure TGVAudio.UnloadMusic(var aMusic: Integer);
 var
-  LMusic: TMusic;
+  LItem: TMusicItem;
 begin
-  Result := False;
-  if not al_is_audio_installed then Exit;
-  if not FMusicList.TryGetValue(aMusic, LMusic) then Exit;
-  if LMusic.Handle = nil then Exit;
-  al_set_audio_stream_playing(LMusic.Handle, False);
-  al_drain_audio_stream(LMusic.Handle);
-  al_detach_audio_stream(LMusic.Handle);
-  al_destroy_audio_stream(LMusic.Handle);
-  FMusicList.Remove(aMusic);
-  aMusic := GV_ID_NIL;
-  Result := True;
+  if not FOpened then Exit;
+
+  // check for valid music id
+  if not GetMusicItem(LItem, aMusic) then Exit;
+
+  // stop music
+  StopMusic(aMusic);
+
+  // free music handle
+  sfMusic_destroy(LItem.MusicHandle);
+
+  // free music file
+  FreeAndNil(LItem.MusicFile);
+
+  // clear item data
+  LItem.MusicHandle := nil;
+  LItem.Size := 0;
+  LItem.Filename := '';
+  LItem.MusicFile := nil;
+  FMusicList.Items[aMusic] := LItem;
+
+  GV.Logger.Log('Unloaded music "%s"', [LItem.Filename]);
+
+  // return handle as invalid
+  aMusic := -1;
 end;
 
 procedure TGVAudio.UnloadAllMusic;
 var
-  LId: TGVMusic;
-  LMusic: TGVMusic;
+  LIndex: Integer;
+  LMusic: Integer;
 begin
-  if not al_is_audio_installed then Exit;
-  for LId in FMusicList.Keys do
+  if not FOpened then Exit;
+
+  for LIndex := 0 to FMusicList.Count-1 do
   begin
-    LMusic := LId;
+    LMusic := LIndex;
+    StopMusic(LMusic);
     UnloadMusic(LMusic);
   end;
 end;
 
-function TGVAudio.PlayMusic(aMusic: TGVMusic; aVolume: Single; aLoop: Boolean): Boolean;
-var
-  LMusic: TMusic;
-  LMode: ALLEGRO_PLAYMODE;
+procedure TGVAudio.PlayMusic(aMusic: Integer; aVolume: Single; aLoop: Boolean);
 begin
-  Result := False;
+  if not FOpened then Exit;
 
-  if not al_is_audio_installed then Exit;
-  if not FMusicList.TryGetValue(aMusic, LMusic) then Exit;
-  if LMusic.Handle = nil then Exit;
-
-  al_set_audio_stream_playing(LMusic.Handle, False);
-  al_rewind_audio_stream(LMusic.Handle);
-  al_set_audio_stream_gain(LMusic.Handle, aVolume);
-  if aLoop then
-    LMode := ALLEGRO_PLAYMODE_LOOP
-  else
-    LMode := ALLEGRO_PLAYMODE_ONCE;
-  al_set_audio_stream_playmode(LMusic.Handle, LMode);
-  al_set_audio_stream_playing(LMusic.Handle, True);
-
-  Result := True;
+  PlayMusic(aMusic);
+  SetMusicVolume(aMusic, aVolume);
+  SetMusicLoop(aMusic, aLoop);
 end;
 
-function  TGVAudio.StopMusic(aMusic: TGVMusic): Boolean;
+procedure TGVAudio.StopMusic(aMusic: Integer);
 var
-  LMusic: TMusic;
+  LItem: TMusicItem;
 begin
-  Result := False;
-  if not al_is_audio_installed then Exit;
-  if not FMusicList.TryGetValue(aMusic, LMusic) then Exit;
-  if LMusic.Handle = nil then Exit;
+  if not FOpened then Exit;
 
-  al_set_audio_stream_playing(LMusic.Handle, False);
-  al_rewind_audio_stream(LMusic.Handle);
+  // check for valid music id
+  if not GetMusicItem(LItem, aMusic) then Exit;
 
-  Result := True;
+  // stop music playing
+  sfMusic_stop(LItem.MusicHandle);
 end;
 
-procedure TGVAudio.StopAllMusic;
+procedure TGVAudio.PauseMusic(aMusic: Integer);
 var
-  LId: TGVMusic;
-  LMusic: TGVMusic;
+  LItem: TMusicItem;
 begin
-  if not al_is_audio_installed then Exit;
-  for LId in FMusicList.Keys do
+  if not FOpened then Exit;
+
+  // check for valid music id
+  if not GetMusicItem(LItem, aMusic) then Exit;
+
+  // pause audio
+  sfMusic_pause(LItem.MusicHandle);
+end;
+
+procedure TGVAudio.PauseAllMusic(aPause: Boolean);
+var
+  LItem: TMusicItem;
+  LIndex: Integer;
+begin
+  if not FOpened then Exit;
+
+  for LIndex := 0 to FMusicList.Count-1 do
   begin
-    LMusic := LId;
-    StopMusic(LMusic);
+    if GetMusicItem(LItem, LIndex) then
+    begin
+      if aPause then
+        PauseMusic(LIndex)
+      else
+        PlayMusic(LIndex);
+    end;
   end;
 end;
 
-function  TGVAudio.GetMusicLooping(aMusic: TGVMusic): Boolean;
+procedure TGVAudio.SetMusicLoop(aMusic: Integer; aLoop: Boolean);
 var
-  LMusic: TMusic;
-  LMode: ALLEGRO_PLAYMODE;
+  LItem: TMusicItem;
+begin
+  if not FOpened then Exit;
+
+  // check for valid music id
+  if not GetMusicItem(LItem, aMusic) then Exit;
+
+  // set music loop status
+  sfMusic_setLoop(LItem.MusicHandle, Ord(aLoop));
+end;
+
+function  TGVAudio.GetMusicLoop(aMusic: Integer): Boolean;
+var
+  LItem: TMusicItem;
 begin
   Result := False;
-  if not al_is_audio_installed then Exit;
-  if not FMusicList.TryGetValue(aMusic, LMusic) then Exit;
-  if LMusic.Handle = nil then Exit;
 
-  LMode := al_get_audio_stream_playmode(LMusic.Handle);
-  if (LMode = ALLEGRO_PLAYMODE_LOOP) or
-     (LMode = _ALLEGRO_PLAYMODE_STREAM_ONEDIR) then
-  begin
-    Result := True;
-  end;
+  if not FOpened then Exit;
+
+  // check for valid music id
+  if not GetMusicItem(LItem, aMusic) then Exit;
+
+  // get music loop status
+  Result := Boolean(sfMusic_getLoop(LItem.MusicHandle));
 end;
 
-procedure TGVAudio.SetMusicLooping(aMusic: TGVMusic; aLoop: Boolean);
+procedure TGVAudio.SetMusicVolume(aMusic: Integer; aVolume: Single);
 var
-  LMusic: TMusic;
-  LMode: ALLEGRO_PLAYMODE;
+  LVol: Single;
+  LItem: TMusicItem;
 begin
-  if not al_is_audio_installed then Exit;
-  if not FMusicList.TryGetValue(aMusic, LMusic) then Exit;
-  if LMusic.Handle = nil then Exit;
-  if aLoop then
-    LMode := ALLEGRO_PLAYMODE_LOOP
-  else
-    LMode := ALLEGRO_PLAYMODE_ONCE;
-  al_set_audio_stream_playmode(LMusic.Handle, LMode);
+  if not FOpened then Exit;
+
+  // check for valid music id
+  if not GetMusicItem(LItem, aMusic) then Exit;
+
+  // check volume range
+  if aVolume < 0 then
+    aVolume := 0
+  else if aVolume > 1 then
+    aVolume := 1;
+
+  // unnormalize value
+  LVol := aVolume * 100;
+
+  // set music volume
+  sfMusic_setVolume(LItem.MusicHandle, LVol);
 end;
 
-function  TGVAudio.GetMusicPlaying(aMusic: TGVMusic): Boolean;
+function  TGVAudio.GetMusicVolume(aMusic: Integer): Single;
 var
-  LMusic: TMusic;
-begin
-  Result := False;
-  if not al_is_audio_installed then Exit;
-  if not FMusicList.TryGetValue(aMusic, LMusic) then Exit;
-  if LMusic.Handle = nil then Exit;
-  Result := al_get_audio_stream_playing(LMusic.Handle);
-end;
-
-procedure TGVAudio.SetMusicPlaying(aMusic: TGVMusic; aPlay: Boolean);
-var
-  LMusic: TMusic;
-begin
-  if not al_is_audio_installed then Exit;
-  if not FMusicList.TryGetValue(aMusic, LMusic) then Exit;
-  if LMusic.Handle = nil then Exit;
-  al_set_audio_stream_playing(LMusic.Handle, aPlay);
-end;
-
-procedure TGVAudio.SetMusicVolume(aMusic: TGVMusic; aVolume: Single);
-var
-  LMusic: TMusic;
-begin
-  if not al_is_audio_installed then Exit;
-  if not FMusicList.TryGetValue(aMusic, LMusic) then Exit;
-  if LMusic.Handle = nil then Exit;
-  al_set_audio_stream_gain(LMusic.Handle, aVolume);
-end;
-
-function  TGVAudio.GetMusicVolume(aMusic: TGVMusic): Single;
-var
-  LMusic: TMusic;
+  LItem: TMusicItem;
 begin
   Result := 0;
-  if not al_is_audio_installed then Exit;
-  if not FMusicList.TryGetValue(aMusic, LMusic) then Exit;
-  if LMusic.Handle = nil then Exit;
-  Result := al_get_audio_stream_gain(LMusic.Handle);
+  if not FOpened then Exit;
+  if not GetMusicItem(LItem, aMusic) then Exit;
+  Result := sfMusic_getVolume(LItem.MusicHandle);
+  Result := Result / 100;
 end;
 
-procedure TGVAudio.SeekMusic(aMusic: TGVMusic; aTime: Single);
+function  TGVAudio.GetMusicStatus(aMusic: Integer): TGVAudioStatus;
 var
-  LMusic: TMusic;
+  LItem: TMusicItem;
 begin
-  if not al_is_audio_installed then Exit;
-  if not FMusicList.TryGetValue(aMusic, LMusic) then Exit;
-  if LMusic.Handle = nil then Exit;
-  al_seek_audio_stream_secs(LMusic.Handle, aTime);
+  Result := TGVAudioStatus.Stopped;
+  if not FOpened then Exit;
+  if not GetMusicItem(LItem, aMusic) then Exit;
+  Result := TGVAudioStatus(sfMusic_getStatus(LItem.MusicHandle));
 end;
 
-procedure TGVAudio.RewindMusic(aMusic: TGVMusic; aTime: Single);
+procedure TGVAudio.SetMusicOffset(aMusic: Integer; aSeconds: Single);
 var
-  LMusic: TMusic;
+  LItem: TMusicItem;
 begin
-  if not al_is_audio_installed then Exit;
-  if not FMusicList.TryGetValue(aMusic, LMusic) then Exit;
-  if LMusic.Handle = nil then Exit;
-  al_rewind_audio_stream(LMusic.Handle);
+  if not FOpened then Exit;
+  if not GetMusicItem(LItem, aMusic) then Exit;
+  sfMusic_setPlayingOffset(LItem.MusicHandle, TimeAsSeconds(aSeconds));
 end;
 
-function  TGVAudio.ReserveSoundChannels(aCount: Integer): Boolean;
-begin
-  Result := False;
-  if not al_is_audio_installed then Exit;
-  Result := al_reserve_samples(aCount);
-end;
-
-function  TGVAudio.LoadSound(aArchive: TGVArchive; const aFilename: string): TGVSound;
+function  TGVAudio.LoadSound(aArchive: TGVArchive; const aFilename: string): Integer;
 var
-  LMarshaller: TMarshaller;
-  LFilename: string;
-  LSound: TSound;
+  LI: Integer;
+  LArchiveFile: TGVArchiveFile;
 begin
-  Result := GV_ID_NIL;
-
-  if not al_is_audio_installed then Exit;
+  Result := AUDIO_INVALID_INDEX;
+  if not FOpened then Exit;
   if aFilename.IsEmpty then Exit;
 
   if aArchive <> nil then
     begin
       if not aArchive.IsOpen then Exit;
       if not aArchive.FileExist(aFilename) then Exit;
-      LFilename := string(aArchive.GetPasswordFilename(aFilename));
+      LArchiveFile := aArchive.OpenFile(aFilename);
+      if LArchiveFile = nil then Exit;
     end
   else
     begin
       if not TFile.Exists(aFilename) then Exit;
-      LFilename := aFilename;
+      LArchiveFile := TGVArchiveFile.Create;
+      if not LArchiveFile.Open(nil, aFilename) then
+      begin
+        GV.Logger.Log('Failed to load sound file: %s', [aFilename]);
+        FreeAndNil(LArchiveFile);
+        Exit;
+      end;
     end;
 
-  if aArchive = nil then GV.SetFileSandBoxed(False);
-  LSound.Handle := al_load_sample(LMarshaller.AsUtf8(LFilename).ToPointer);
-  if aArchive = nil then GV.SetFileSandBoxed(True);
+  LI := FindFreeBuffer(aFilename);
+  if LI = AUDIO_INVALID_INDEX then Exit;
 
-  if LSound.Handle = nil then Exit;
-
-  Result := GetID;
-  LSound.Filename := aFilename;
-  FSampleList.Add(Result, LSound);
-end;
-
-procedure TGVAudio.UnloadSound(var aSound: TGVSound);
-var
-  LSound: TSound;
-begin
-  if not al_is_audio_installed then Exit;
-  if not FSampleList.TryGetValue(aSound, LSound) then Exit;
-  if LSound.Handle = nil then Exit;
-  al_destroy_sample(LSound.Handle);
-  FSampleList.Remove(aSound);
-  aSound := GV_ID_NIL;
-end;
-
-procedure TGVAudio.UnloadAllSounds;
-var
-  LKey: TGVSound;
-  LSound: TGVSound;
-begin
-  if not al_is_audio_installed then Exit;
-  for LKey in FSampleList.Keys do
+  FBuffer[LI].Buffer := sfSoundBuffer_createFromStream(LArchiveFile.InputStream);
+  if FBuffer[LI].Buffer = nil then
   begin
-    LSound := LKey;
-    UnloadSound(LSound);
+    FreeAndNil(LArchiveFile);
+    GV.Logger.Log('Failed to load sound file: %s', [aFilename]);
+    Exit;
   end;
+
+  FBuffer[LI].Filename := aFilename;
+  GV.Logger.Log('Sucessfully loaded sound "%s"', [aFilename]);
+
+  FreeAndNil(LArchiveFile);
+
+  Result := LI;
 end;
 
-function  TGVAudio.PlaySound(aSound: TGVSound; aVolume: Single; aLoop: Boolean; aPan: Single; aSpeed: Single): TGVSoundId;
+procedure TGVAudio.UnloadSound(aSound: Integer);
 var
-  LSound: TSound;
-  LMode: ALLEGRO_PLAYMODE;
-  LID: ALLEGRO_SAMPLE_ID;
+  LBuff: PsfSoundBuffer;
+  LSnd: PsfSound;
+  LI: Integer;
 begin
-  Result := GV_ID_NIL;
-  if not al_is_audio_installed then Exit;
-  if not FSampleList.TryGetValue(aSound, LSound) then Exit;
-  if LSound.Handle = nil then Exit;
+  if not FOpened then Exit;
 
-  if aLoop then
-    LMode := ALLEGRO_PLAYMODE_LOOP
-  else
-    LMode := ALLEGRO_PLAYMODE_ONCE;
+  if (aSound < 0) or (aSound > AUDIO_BUFFER_COUNT - 1) then  Exit;
+  LBuff := FBuffer[aSound].Buffer;
+  if LBuff = nil then Exit;
 
-  if not al_play_sample(LSound.Handle, aVolume, aPan, aSpeed, LMode, @LID) then Exit;
-
-  Result := GetID;
-  FSampleIdList.Add(Result, LID);
-end;
-
-procedure TGVAudio.StopSound(var aId: TGVSoundId);
-var
-  LID: ALLEGRO_SAMPLE_ID;
-  LInstance: PALLEGRO_SAMPLE_INSTANCE;
-begin
-  if not al_is_audio_installed then Exit;
-  if not FSampleIdList.TryGetValue(aId, LID) then Exit;
-  LInstance := al_lock_sample_id(@LID);
-  try
-    if LInstance = nil then Exit;
-    if not al_get_sample_instance_playing(LInstance) then Exit;
-    al_stop_sample(@LID);
-    aId := GV_ID_NIL;
-  finally
-    al_unlock_sample_id(@LID);
-  end;
-end;
-
-procedure TGVAudio.StopAllSounds;
-var
-  LKey: TGVSoundId;
-  LSound: TGVSoundId;
-begin
-  if not al_is_audio_installed then Exit;
-  for LKey in FSampleIdList.Keys do
+  // stop all channels playing this buffer
+  for LI := 0 to AUDIO_CHANNEL_COUNT - 1 do
   begin
-    LSound := LKey;
-    StopSound(LSound);
+    LSnd := FChannel[LI].Sound;
+    if LSnd <> nil then
+    begin
+      if sfSound_getBuffer(LSnd) = LBuff then
+      begin
+        sfSound_stop(LSnd);
+        sfSound_destroy(LSnd);
+        FChannel[LI].Sound := nil;
+        FChannel[LI].Reserved := False;
+        FChannel[LI].Priority := 0;
+      end;
+    end;
   end;
+
+  // destroy this buffer
+  sfSoundBuffer_destroy(LBuff);
+  GV.Logger.Log('Unloaded sound "%s"', [FBuffer[aSound].Filename]);
+  FBuffer[aSound].Buffer := nil;
+  FBuffer[aSound].Filename := '';
 end;
 
-function  TGVAudio.SoundPlaying(aId: TGVSoundId): Boolean;
-var
-  LID: ALLEGRO_SAMPLE_ID;
-  LInstance: PALLEGRO_SAMPLE_INSTANCE;
+function  TGVAudio.PlaySound(aChannel: Integer; aSound: Integer; aVolume: Single; aLoop: Boolean): Integer;
+begin
+  Result := AUDIO_INVALID_INDEX;
+  if not FOpened then Exit;
+
+  Result := PlaySound(aChannel, aSound);
+  SetChannelVolume(Result, aVolume);
+  SetChannelLoop(Result, aLoop);
+end;
+
+procedure TGVAudio.SetChannelReserved(aChannel: Integer; aReserve: Boolean);
+begin
+  if not FOpened then Exit;
+  if (aChannel < 0) or (aChannel > AUDIO_CHANNEL_COUNT - 1) then Exit;
+  FChannel[aChannel].Reserved := aReserve;
+end;
+
+function  TGVAudio.GetChannelReserved(aChannel: Integer): Boolean;
 begin
   Result := False;
-  if not al_is_audio_installed then Exit;
-  if not FSampleIdList.TryGetValue(aId, LID) then Exit;
-  LInstance := al_lock_sample_id(@LID);
-  try
-    if LInstance = nil then Exit;
-    Result := al_get_sample_instance_playing(LInstance);
-  finally
-    al_unlock_sample_id(@LID);
+  if not FOpened then Exit;
+  if (aChannel < 0) or (aChannel > AUDIO_CHANNEL_COUNT - 1) then  Exit;
+  Result := FChannel[aChannel].Reserved;
+end;
+
+procedure TGVAudio.PauseChannel(aChannel: Integer; aPause: Boolean);
+var
+  LStatus: TsfSoundStatus;
+begin
+  if not FOpened then Exit;
+
+  if (aChannel < 0) or (aChannel > AUDIO_CHANNEL_COUNT - 1) then Exit;
+
+  LStatus := sfSound_getStatus(FChannel[aChannel].Sound);
+
+  case aPause of
+    False:
+      begin
+        if LStatus = TsfSoundStatus.sfPaused then
+          sfSound_play(FChannel[aChannel].Sound);
+      end;
+    True:
+      begin
+        if LStatus = TsfSoundStatus.sfPlaying then
+          sfSound_pause(FChannel[aChannel].Sound);
+      end;
   end;
+end;
+
+function  TGVAudio.GetChannelStatus(aChannel: Integer): TGVAudioStatus;
+begin
+  Result := TGVAudioStatus.Stopped;
+  if not FOpened then Exit;
+  if (aChannel < 0) or (aChannel > AUDIO_CHANNEL_COUNT - 1) then Exit;
+  Result := TGVAudioStatus(sfSound_getStatus(FChannel[aChannel].Sound));
+end;
+
+procedure TGVAudio.SetChannelVolume(aChannel: Integer; aVolume: Single);
+var
+  LV: Single;
+begin
+  if not FOpened then Exit;
+
+  if (aChannel < 0) or (aChannel > AUDIO_CHANNEL_COUNT - 1) then Exit;
+
+  if aVolume < 0 then
+    aVolume := 0
+  else if aVolume > 1 then
+    aVolume := 1;
+
+  LV := aVolume * 100;
+  sfSound_setVolume(FChannel[aChannel].Sound, LV);
+end;
+
+function  TGVAudio.GetChannelVolume(aChannel: Integer): Single;
+begin
+  Result := 0;
+  if not FOpened then Exit;
+  if (aChannel < 0) or (aChannel > AUDIO_CHANNEL_COUNT - 1) then Exit;
+  Result := sfSound_getVolume(FChannel[aChannel].Sound);
+  Result := Result / 100;
+end;
+
+procedure TGVAudio.SetChannelLoop(aChannel: Integer; aLoop: Boolean);
+begin
+  if not FOpened then Exit;
+  if (aChannel < 0) or (aChannel > AUDIO_CHANNEL_COUNT - 1) then Exit;
+  sfSound_setLoop(FChannel[aChannel].Sound, Ord(aLoop));
+end;
+
+function  TGVAudio.GetChannelLoop(aChannel: Integer): Boolean;
+begin
+  Result := False;
+  if not FOpened then Exit;
+  if (aChannel < 0) or (aChannel > AUDIO_CHANNEL_COUNT - 1) then Exit;
+  Result := Boolean(sfSound_getLoop(FChannel[aChannel].Sound));
+end;
+
+procedure TGVAudio.SetChannelPitch(aChannel: Integer; aPitch: Single);
+begin
+  if not FOpened then Exit;
+  if (aChannel < 0) or (aChannel > AUDIO_CHANNEL_COUNT - 1) then Exit;
+  sfSound_setPitch(FChannel[aChannel].Sound, aPitch);
+end;
+
+function  TGVAudio.GetChannelPitch(aChannel: Integer): Single;
+begin
+  Result := 0;
+  if not FOpened then Exit;
+  if (aChannel < 0) or (aChannel > AUDIO_CHANNEL_COUNT - 1) then  Exit;
+  Result := sfSound_getPitch(FChannel[aChannel].Sound);
+end;
+
+procedure TGVAudio.SetChannelPosition(aChannel: Integer; aX: Single; aY: Single);
+var
+  LV: TsfVector3f;
+begin
+  if not FOpened then Exit;
+  if (aChannel < 0) or (aChannel > AUDIO_CHANNEL_COUNT - 1) then Exit;
+  LV.X := aX;
+  LV.Y := 0;
+  LV.Z := aY;
+  sfSound_setPosition(FChannel[aChannel].Sound, LV);
+end;
+
+procedure TGVAudio.GetChannelPosition(aChannel: Integer; var aX: Single; var aY: Single);
+var
+  LV: TsfVector3f;
+begin
+  if not FOpened then Exit;
+  if (aChannel < 0) or (aChannel > AUDIO_CHANNEL_COUNT - 1) then Exit;
+  LV := sfSound_getPosition(FChannel[aChannel].Sound);
+  aX := LV.X;
+  aY := LV.Z;
+end;
+
+procedure TGVAudio.SetChannelMinDistance(aChannel: Integer; aDistance: Single);
+begin
+  if not FOpened then Exit;
+  if (aChannel < 0) or (aChannel > AUDIO_CHANNEL_COUNT - 1) then Exit;
+  if aDistance < 1 then  aDistance := 1;
+  sfSound_setMinDistance(FChannel[aChannel].Sound, aDistance);
+end;
+
+function  TGVAudio.GetChannelMinDistance(aChannel: Integer): Single;
+begin
+  Result := 0;
+  if not FOpened then Exit;
+  if (aChannel < 0) or (aChannel > AUDIO_CHANNEL_COUNT - 1) then Exit;
+  Result := sfSound_getMinDistance(FChannel[aChannel].Sound);
+end;
+
+procedure TGVAudio.SetChannelRelativeToListener(aChannel: Integer; aRelative: Boolean);
+begin
+  if not FOpened then Exit;
+  if (aChannel < 0) or (aChannel > AUDIO_CHANNEL_COUNT - 1) then Exit;
+  sfSound_setRelativeToListener(FChannel[aChannel].Sound, Ord(aRelative));
+end;
+
+function  TGVAudio.GetChannelRelativeToListener(aChannel: Integer): Boolean;
+begin
+  Result := False;
+  if not FOpened then Exit;
+  if (aChannel < 0) or (aChannel > AUDIO_CHANNEL_COUNT - 1) then Exit;
+  Result := Boolean(sfSound_isRelativeToListener(FChannel[aChannel].Sound));
+end;
+
+procedure TGVAudio.SetChannelAttenuation(aChannel: Integer; aAttenuation: Single);
+begin
+  if not FOpened then Exit;
+  if (aChannel < 0) or (aChannel > AUDIO_CHANNEL_COUNT - 1) then  Exit;
+  sfSound_setAttenuation(FChannel[aChannel].Sound, aAttenuation);
+end;
+
+function  TGVAudio.GetChannelAttenuation(aChannel: Integer): Single;
+begin
+  Result := 0;
+  if not FOpened then Exit;
+  if (aChannel < 0) or (aChannel > AUDIO_CHANNEL_COUNT - 1) then Exit;
+  Result := sfSound_getAttenuation(FChannel[aChannel].Sound);
+end;
+
+procedure TGVAudio.StopChannel(aChannel: Integer);
+begin
+  if not FOpened then Exit;
+  if (aChannel < 0) or (aChannel > AUDIO_CHANNEL_COUNT - 1) then Exit;
+  sfSound_stop(FChannel[aChannel].Sound);
+end;
+
+procedure TGVAudio.StopAllChannels;
+var
+  LI: Integer;
+begin
+  if not FOpened then Exit;
+  for LI := 0 to AUDIO_CHANNEL_COUNT-1 do
+  begin
+    sfSound_stop(FChannel[LI].Sound);
+  end;
+end;
+
+procedure TGVAudio.SetListenerGlobalVolume(aVolume: Single);
+var
+  LV: Single;
+begin
+  if not FOpened then Exit;
+  LV := aVolume;
+  if (LV < 0) then
+    LV := 0
+  else if (LV > 1) then
+    LV := 1;
+
+  LV := LV * 100;
+  sfListener_setGlobalVolume(LV);
+end;
+
+function  TGVAudio.GetListenerGlobalVolume: Single;
+begin
+  Result := 0;
+  if not FOpened then Exit;
+  Result := sfListener_getGlobalVolume;
+  Result := Result / 100;
+end;
+
+procedure TGVAudio.SetListenerPosition(aX: Single; aY: Single);
+var
+  LV: TsfVector3f;
+begin
+  if not FOpened then Exit;
+  LV.X := aX;
+  LV.Y := 0;
+  LV.Z := aY;
+  sfListener_setPosition(LV);
+end;
+
+procedure TGVAudio.GetListenerPosition(var aX: Single; var aY: Single);
+var
+  LV: TsfVector3f;
+begin
+  if not FOpened then Exit;
+  LV := sfListener_getPosition;
+  aX := LV.X;
+  aY := LV.Z;
 end;
 
 { --- VIDEO ----------------------------------------------------------------- }
@@ -16389,6 +17313,573 @@ begin
     FScale, FAngle, @FOrigin, FHFlip, FVFlip, LShrinkFactor, aPoint);
 end;
 
+{ --- ACTOR ----------------------------------------------------------------- }
+{ TGVActor }
+constructor TGVActor.Create;
+begin
+  inherited;
+  FTerminated := False;
+  FActorList := nil;
+  FCanCollide := False;
+  FChildren := TGVActorList.Create;
+end;
+
+destructor TGVActor.Destroy;
+begin
+  FreeAndNil(FChildren);
+  inherited;
+end;
+
+procedure TGVActor.OnVisit(aSender: TGVActor; aEventId: Integer; var aDone: Boolean);
+begin
+end;
+
+procedure TGVActor.OnUpdate(aDeltaTime: Double);
+begin
+  // update all children by default
+  FChildren.Update([], aDeltaTime);
+end;
+
+procedure TGVActor.OnRender;
+begin
+  // render all children by default
+  FChildren.Render([]);
+end;
+
+function TGVActor.OnMessage(aMsg: PGVActorMessage): TGVActor;
+begin
+  Result := nil;
+end;
+
+procedure TGVActor.OnCollide(aActor: TGVActor; aHitPos: TGVVector);
+begin
+end;
+
+function TGVActor.Collide(aActor: TGVActor; var aHitPos: TGVVector): Boolean;
+begin
+  Result := False;
+end;
+
+function TGVActor.Overlap(aX, aY, aRadius, aShrinkFactor: Single): Boolean;
+begin
+  Result := False;
+end;
+
+function TGVActor.Overlap(aActor: TGVActor): Boolean;
+begin
+  Result := False;
+end;
+
+{ --- ACTORLIST ------------------------------------------------------------- }
+{ TGVActorList }
+constructor TGVActorList.Create;
+begin
+  inherited;
+end;
+
+destructor TGVActorList.Destroy;
+begin
+  inherited;
+end;
+
+procedure TGVActorList.Add(aObject: TGVObject);
+begin
+  if aObject is TGVActor then
+    inherited;
+end;
+
+procedure TGVActorList.Remove(aObject: TGVObject; aDispose: Boolean);
+begin
+  if aObject is TGVActor then
+    inherited;
+end;
+
+procedure TGVActorList.Clean;
+var
+  LObj: TGVObject;
+  LNext: TGVObject;
+begin
+  // get pointer to head
+  LObj := FHead;
+
+  // exit if list is empty
+  if LObj = nil then
+    Exit;
+
+  repeat
+    // save pointer to next object
+    LNext := LObj.Next;
+
+    if TGVActor(LObj).Terminated then
+    begin
+      Remove(LObj, True);
+    end;
+
+    // get pointer to next object
+    LObj := LNext;
+
+  until LNext = nil;
+end;
+
+procedure TGVActorList.Clear(aAttrs: TGVObjectAttributeSet);
+begin
+  inherited;
+end;
+
+procedure TGVActorList.ForEach(aSender: TGVActor; aAttrs: TGVObjectAttributeSet; aEventId: Integer; var aDone: Boolean);
+var
+  LObj: TGVObject;
+  LNext: TGVObject;
+  LNoAttrs: Boolean;
+begin
+  if not (aSender is TGVActor) then
+    Exit;
+
+  // get pointer to head
+  LObj := FHead;
+
+  // exit if list is empty
+  if LObj = nil then
+    Exit;
+
+  // check if we should check for attrs
+  LNoAttrs := Boolean(aAttrs = []);
+
+  repeat
+    // save pointer to next actor
+    LNext := TGVActor(LObj.Next);
+
+    // destroy actor if not terminated
+    if not TGVActor(LObj).Terminated then
+    begin
+      // no attributes specified so update this actor
+      if LNoAttrs then
+      begin
+        aDone := False;
+        TGVActor(LPtr).OnVisit(aSender, aEventId, aDone);
+        if aDone then
+        begin
+          Exit;
+        end;
+      end
+      else
+      begin
+        // update this actor if it has specified attribute
+        if TGVActor(LObj).AttributesAreSet(aAttrs) then
+        begin
+          aDone := False;
+          TGVActor(LObj).OnVisit(aSender, aEventId, aDone);
+          if aDone then
+          begin
+            Exit;
+          end;
+        end;
+      end;
+    end;
+
+    // get pointer to next actor
+    LObj := LNext;
+
+  until LObj = nil;
+end;
+
+procedure TGVActorList.Update(aAttrs: TGVObjectAttributeSet; aDeltaTime: Double);
+var
+  LObj: TGVObject;
+  LNext: TGVObject;
+  LNoAttrs: Boolean;
+begin
+  // get pointer to head
+  LObj := FHead;
+
+  // exit if list is empty
+  if LObj = nil then  Exit;
+
+  // check if we should check for attrs
+  LNoAttrs := Boolean(aAttrs = []);
+
+  repeat
+    // save pointer to next actor
+    LNext := LObj.Next;
+
+    // destroy actor if not terminated
+    if not TGVActor(LObj).Terminated then
+    begin
+      // no attributes specified so update this actor
+      if LNoAttrs then
+      begin
+        // call actor's OnUpdate method
+        TGVActor(LObj).OnUpdate(aDeltaTime);
+      end
+      else
+      begin
+        // update this actor if it has specified attribute
+        if LObj.AttributesAreSet(aAttrs) then
+        begin
+          // call actor's OnUpdate method
+          TGVActor(LObj).OnUpdate(aDeltaTime);
+        end;
+      end;
+    end;
+
+    // get pointer to next actor
+    LObj := LNext;
+
+  until LObj = nil;
+
+  // perform garbage collection
+  Clean;
+end;
+
+procedure TGVActorList.Render(aAttrs: TGVObjectAttributeSet);
+var
+  LObj: TGVObject;
+  LNext: TGVObject;
+  LNoAttrs: Boolean;
+begin
+  // get pointer to head
+  LObj := FHead;
+
+  // exit if list is empty
+  if LObj = nil then Exit;
+
+  // check if we should check for attrs
+  LNoAttrs := Boolean(aAttrs = []);
+
+  repeat
+    // save pointer to next actor
+    LNext := LObj.Next;
+
+    // destroy actor if not terminated
+    if not TGVActor(LObj).Terminated then
+    begin
+      // no attributes specified so update this actor
+      if LNoAttrs then
+      begin
+        // call actor's OnRender method
+        TGVActor(LObj).OnRender;
+      end
+      else
+      begin
+        // update this actor if it has specified attribute
+        if LObj.AttributesAreSet(aAttrs) then
+        begin
+          // call actor's OnRender method
+          TGVActor(LObj).OnRender;
+        end;
+      end;
+    end;
+
+    // get pointer to next actor
+    LObj := LNext;
+
+  until LObj = nil;
+end;
+
+function TGVActorList.SendMessage(aAttrs: TGVObjectAttributeSet; aMsg: PGVActorMessage; aBroadcast: Boolean): TGVActor;
+var
+  LObj: TGVObject;
+  LNext: TGVObject;
+  LNoAttrs: Boolean;
+begin
+  Result := nil;
+
+  // get pointer to head
+  LObj := FHead;
+
+  // exit if list is empty
+  if LObj = nil then Exit;
+
+  // check if we should check for attrs
+  LNoAttrs := Boolean(aAttrs = []);
+
+  repeat
+    // save pointer to next actor
+    LNext := LObj.Next;
+
+    // destroy actor if not terminated
+    if not TGVActor(LPtr).Terminated then
+    begin
+      // no attributes specified so update this actor
+      if LNoAttrs then
+      begin
+        // send message to object
+        Result := TGVActor(LPtr).OnMessage(aMsg);
+        if not aBroadcast then
+        begin
+          if Result <> nil then
+          begin
+            Exit;
+          end;
+        end;
+      end
+      else
+      begin
+        // update this actor if it has specified attribute
+        if LObj.AttributesAreSet(aAttrs) then
+        begin
+          // send message to object
+          Result := TGVActor(LPtr).OnMessage(aMsg);
+          if not aBroadcast then
+          begin
+            if Result <> nil then
+            begin
+              Exit;
+            end;
+          end;
+
+        end;
+      end;
+    end;
+
+    // get pointer to next actor
+    LObj := LNext;
+
+  until LObj = nil;
+end;
+
+procedure TGVActorList.CheckCollision(aAttrs: TGVObjectAttributeSet; aActor: TGVActor);
+var
+  LObj: TGVObject;
+  LNext: TGVObject;
+  LNoAttrs: Boolean;
+  LHitPos: TGVVector;
+begin
+  // check if terminated
+  if aActor.Terminated then Exit;
+
+  // check if can collide
+  if not aActor.CanCollide then Exit;
+
+  // get pointer to head
+  LObj := FHead;
+
+  // exit if list is empty
+  if LObj = nil then Exit;
+
+  // check if we should check for attrs
+  LNoAttrs := Boolean(aAttrs = []);
+
+  repeat
+    // save pointer to next actor
+    LNext := LObj.Next;
+
+    // destroy actor if not terminated
+    if not TGVActor(LObj).Terminated then
+    begin
+      // no attributes specified so check collision with this actor
+      if LNoAttrs then
+      begin
+
+        if TGVActor(LObj).CanCollide then
+        begin
+          // HitPos.Clear;
+          LHitPos.X := 0;
+          LHitPos.Y := 0;
+          if aActor.Collide(TGVActor(LObj), LHitPos) then
+          begin
+            TGVActor(LObj).OnCollide(aActor, LHitPos);
+            aActor.OnCollide(TGVActor(LObj), LHitPos);
+            // Exit;
+          end;
+        end;
+
+      end
+      else
+      begin
+        // check collision with this actor if it has specified attribute
+        if TGVActor(LObj).AttributesAreSet(aAttrs) then
+        begin
+          if TGVActor(LObj).CanCollide then
+          begin
+            // HitPos.Clear;
+            LHitPos.X := 0;
+            LHitPos.Y := 0;
+            if aActor.Collide(TGVActor(LObj), LHitPos) then
+            begin
+              TGVActor(LObj).OnCollide(aActor, LHitPos);
+              aActor.OnCollide(TGVActor(LObj), LHitPos);
+              // Exit;
+            end;
+          end;
+
+        end;
+      end;
+    end;
+
+    // get pointer to next actor
+    LObj := LNext;
+
+  until LObj = nil;
+end;
+
+{ --- ACTORSCENE ------------------------------------------------------------ }
+
+{ TGVActorScene }
+function TGVActorScene.GetList(aIndex: Integer): TGVActorList;
+begin
+  Result := FLists[aIndex];
+end;
+
+function TGVActorScene.GetCount: Integer;
+begin
+  Result := FCount;
+end;
+
+constructor TGVActorScene.Create;
+begin
+  inherited;
+  FLists := nil;
+  FCount := 0;
+end;
+
+destructor TGVActorScene.Destroy;
+begin
+  Dealloc;
+  inherited;
+end;
+
+procedure TGVActorScene.Alloc(aNum: Integer);
+var
+  LI: Integer;
+begin
+  Dealloc;
+  FCount := aNum;
+  SetLength(FLists, FCount);
+  for LI := 0 to FCount - 1 do
+  begin
+    FLists[LI] := TGVActorList.Create;
+  end;
+end;
+
+procedure TGVActorScene.Dealloc;
+var
+  LI: Integer;
+begin
+  ClearAll;
+  for LI := 0 to FCount - 1 do
+  begin
+    FLists[LI].Free;
+  end;
+  FLists := nil;
+  FCount := 0;
+end;
+
+procedure TGVActorScene.Clean(aIndex: Integer);
+begin
+  if (aIndex < 0) or (aIndex > FCount - 1) then Exit;
+  FLists[aIndex].Clean;
+end;
+
+procedure TGVActorScene.Clear(aIndex: Integer; aAttrs: TGVObjectAttributeSet);
+begin
+  if (aIndex < 0) or (aIndex > FCount - 1) then Exit;
+  FLists[aIndex].Clear(aAttrs);
+end;
+
+procedure TGVActorScene.ClearAll;
+var
+  LI: Integer;
+begin
+  for LI := 0 to FCount - 1 do
+  begin
+    FLists[LI].Clear([]);
+  end;
+end;
+
+procedure TGVActorScene.Update(aAttrs: TGVObjectAttributeSet; aDeltaTime: Double);
+var
+  LI: Integer;
+begin
+  for LI := 0 to FCount - 1 do
+  begin
+    FLists[LI].Update(aAttrs, aDeltaTime);
+  end;
+end;
+
+procedure TGVActorScene.Render(aAttrs: TGVObjectAttributeSet; aBefore: TGVActorSceneEvent; aAfter: TGVActorSceneEvent);
+var
+  LI: Integer;
+begin
+  for LI := 0 to FCount - 1 do
+  begin
+    if Assigned(aBefore) then aBefore(LI);
+    FLists[LI].Render(aAttrs);
+    if Assigned(aAfter) then aAfter(LI);
+  end;
+end;
+
+function TGVActorScene.SendMessage(aAttrs: TGVObjectAttributeSet; aMsg: PGVActorMessage; aBroadcast: Boolean): TGVActor;
+var
+  LI: Integer;
+begin
+  Result := nil;
+  for LI := 0 to FCount - 1 do
+  begin
+    Result := FLists[LI].SendMessage(aAttrs, aMsg, aBroadcast);
+    if not aBroadcast then
+    begin
+      if Result <> nil then
+      begin
+        Exit;
+      end;
+    end;
+  end;
+end;
+
+{ --- ENTITYACTOR ----------------------------------------------------------- }
+{ TGVEntityActor }
+constructor TGVEntityActor.Create;
+begin
+  inherited;
+  FEntity := nil;
+end;
+
+destructor TGVEntityActor.Destroy;
+begin
+  FreeAndNil(FEntity);
+  inherited;
+end;
+
+procedure TGVEntityActor.Init(aSprite: TGVSprite; aGroup: Integer);
+begin
+  FEntity := TGVEntity.Create;
+  FEntity.Init(aSprite, aGroup);
+end;
+
+function TGVEntityActor.Collide(aActor: TGVActor; var aHitPos: TGVVector): Boolean;
+begin
+  Result := False;
+  if FEntity = nil then Exit;
+  if aActor is TGVEntityActor then
+  begin
+    Result := FEntity.CollidePolyPoint(TGVEntityActor(aActor).Entity, aHitPos);
+  end
+end;
+
+function TGVEntityActor.Overlap(aX, aY, aRadius, aShrinkFactor: Single): Boolean;
+begin
+  Result := FAlse;
+  if FEntity = nil then Exit;
+  Result := FEntity.Overlap(aX, aY, aRadius, aShrinkFactor);
+end;
+
+function TGVEntityActor.Overlap(aActor: TGVActor): Boolean;
+begin
+  Result := False;
+  if FEntity = nil then Exit;
+  if aActor is TGVEntityActor then
+  begin
+    Result := FEntity.Overlap(TGVEntityActor(aActor).Entity);
+  end;
+end;
+
+procedure TGVEntityActor.OnRender;
+begin
+  if FEntity = nil then Exit;
+  FEntity.Render(0, 0);
+end;
+
 { --- CUSTOMGAME ------------------------------------------------------------ }
 { TGVCustomGame }
 constructor TGVCustomGame.Create;
@@ -16544,6 +18035,11 @@ begin
   aSettings.HudPosX := 3;
   aSettings.HudPosY := 3;
   aSettings.HudLineSpace := 0;
+
+  // scene
+  aSettings.SceneCount := 1;
+  aSettings.SceneRenderAttr := [];
+  aSettings.SceneUpdateAttr := [];
 end;
 
 procedure TGVGame.OnApplySettings;
@@ -16619,12 +18115,19 @@ begin
   // end
   FInputMap.Add('end', TGVInputMapDevice.Keyboard, KEY_END);
 
-  // init sprite
+  // sprite
   FSprite := TGVSprite.Create;
+
+  // scene
+  FScene := TGVActorScene.Create;
+  FScene.Alloc(FSettings.SceneCount);
 end;
 
 procedure TGVGame.OnUnApplySettings;
 begin
+  // scene
+  FreeAndNil(FScene);
+
   // sprite
   FreeAndNil(FSprite);
 
@@ -16657,6 +18160,8 @@ procedure TGVGame.OnUpdateFrame(aDeltaTime: Double);
 begin
   If FInputMap.Pressed('cancel') then
     SetTerminate(True);
+
+  FScene.Update(Settings.SceneUpdateAttr, aDeltaTime);
 end;
 
 procedure TGVGame.OnFixedUpdateFrame;
@@ -16678,6 +18183,7 @@ end;
 
 procedure TGVGame.OnRenderFrame;
 begin
+  FScene.Render(Settings.SceneRenderAttr, OnBeforeRenderScene, OnAfterRenderScene);
 end;
 
 procedure TGVGame.OnRenderHUD;
@@ -16718,6 +18224,14 @@ begin
 end;
 
 procedure TGVGame.OnScreenshot(const aFilename: string);
+begin
+end;
+
+procedure TGVGame.OnBeforeRenderScene(aSceneNum: Integer);
+begin
+end;
+
+procedure TGVGame.OnAfterRenderScene(aSceneNum: Integer);
 begin
 end;
 
@@ -16857,6 +18371,8 @@ begin
   FReady := True;
   ResetTiming;
 
+  GV.Audio.Open;
+
   while not FTerminated do
   begin
     repeat
@@ -16940,7 +18456,7 @@ begin
       begin
         GV.Async.Process;
         OnStartFrame;
-        GV.Audio.Update;
+        //GV.Audio.Update;
         UpdateTiming;
         OnClearFrame;
         OnRenderFrame;
@@ -16958,7 +18474,7 @@ begin
       end;
   end;
 
-  GV.Audio.Clear;
+  GV.Audio.Close;
   GV.Video.Unload;
 end;
 
@@ -17058,6 +18574,7 @@ begin
   if FDllHandle = 0 then AbortDLL;
   GetExports(FDLLHandle);
   GetPasLibsExports(FDLLHandle);
+  GetCSFMLAudioExports(FDLLHandle);
 end;
 
 procedure TGV.UnloadDLL;

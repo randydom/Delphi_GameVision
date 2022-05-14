@@ -186,7 +186,6 @@ begin
   FFigure.SetPosAbs(GV.Window.Width/2, GV.Window.Height/2);
   FFigure.TracePolyPoint(6, 12, 70);
   FFigure.SetRenderPolyPoint(True);
-
 end;
 
 procedure TEntityPolyPointCollision.OnShutdown;
