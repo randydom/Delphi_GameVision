@@ -76,7 +76,10 @@ interface
 
 uses
   System.SysUtils,
-  GameVision,
+  GameVision.Common,
+  GameVision.Color,
+  GameVision.Texture,
+  GameVision.Game,
   uCommon;
 
 type
@@ -85,68 +88,16 @@ type
   protected
     FTexture: TGVTexture;
   public
-    constructor Create; override;
-    destructor Destroy; override;
-    procedure OnPreStartup; override;
-    procedure OnPostStartup; override;
-    procedure OnLoadConfig; override;
-    procedure OnSaveConfig; override;
-    procedure OnSetSettings(var aSettings: TGVSettings); override;
+    procedure OnSetSettings(var aSettings: TGVGameSettings); override;
     procedure OnStartup; override;
     procedure OnShutdown; override;
-    procedure OnReady(aReady: Boolean); override;
-    procedure OnUpdateFrame(aDeltaTime: Double); override;
-    procedure OnFixedUpdateFrame; override;
-    procedure OnStartFrame; override;
-    procedure OnEndFrame; override;
-    procedure OnClearFrame; override;
     procedure OnRenderFrame; override;
-    procedure OnRenderHUD; override;
-    procedure OnShowFrame; override;
-    procedure OnLoadVideo(const aFilename: string); override;
-    procedure OnUnloadVideo(const aFilename: string); override;
-    procedure OnStartVideo(const aFilename: string); override;
-    procedure OnFinishedVideo(const aFilename: string); override;
-    procedure OnSpeechWord(aFWord: string; aText: string); override;
   end;
 
 implementation
 
 { TTexture }
-constructor TTexture.Create;
-begin
-  inherited;
-end;
-
-destructor TTexture.Destroy;
-begin
-  inherited;
-end;
-
-procedure TTexture.OnPreStartup;
-begin
-  inherited;
-  FTexture := TGVTexture.Create;
-  FTexture.Load(FArchive, 'arc/images/cheetah.jpg', nil);
-end;
-
-procedure TTexture.OnPostStartup;
-begin
-  FreeAndNil(FTexture);
-  inherited;
-end;
-
-procedure TTexture.OnLoadConfig;
-begin
-  inherited;
-end;
-
-procedure TTexture.OnSaveConfig;
-begin
-  inherited;
-end;
-
-procedure TTexture.OnSetSettings(var aSettings: TGVSettings);
+procedure TTexture.OnSetSettings(var aSettings: TGVGameSettings);
 begin
   inherited;
   aSettings.WindowTitle := 'GameVision - Texture';
@@ -157,82 +108,20 @@ end;
 procedure TTexture.OnStartup;
 begin
   inherited;
+  FTexture := TGVTexture.Create;
+  FTexture.Load(FArchive, 'arc/images/cheetah.jpg', nil);
 end;
 
 procedure TTexture.OnShutdown;
 begin
-  inherited;
-end;
-
-procedure TTexture.OnReady(aReady: Boolean);
-begin
-  inherited;
-end;
-
-procedure TTexture.OnUpdateFrame(aDeltaTime: Double);
-begin
-  inherited;
-end;
-
-procedure TTexture.OnFixedUpdateFrame;
-begin
-  inherited;
-end;
-
-procedure TTexture.OnStartFrame;
-begin
-  inherited;
-end;
-
-procedure TTexture.OnEndFrame;
-begin
-  inherited;
-end;
-
-procedure TTexture.OnClearFrame;
-begin
+  FreeAndNil(FTexture);
   inherited;
 end;
 
 procedure TTexture.OnRenderFrame;
 begin
   inherited;
-end;
-
-procedure TTexture.OnRenderHUD;
-begin
-  inherited;
-  FTexture.Draw(0, 0, 1, 0, WHITE, TGVHAlign.Left, TGVVAlign.Top);
-end;
-
-procedure TTexture.OnShowFrame;
-begin
-  inherited;
-end;
-
-procedure TTexture.OnLoadVideo(const aFilename: string);
-begin
-  inherited;
-end;
-
-procedure TTexture.OnUnloadVideo(const aFilename: string);
-begin
-  inherited;
-end;
-
-procedure TTexture.OnStartVideo(const aFilename: string);
-begin
-  inherited;
-end;
-
-procedure TTexture.OnFinishedVideo(const aFilename: string);
-begin
-  inherited;
-end;
-
-procedure TTexture.OnSpeechWord(aFWord: string; aText: string);
-begin
-  inherited;
+  FTexture.Draw(0, 0, 1, 0, WHITE, haLeft, vaTop);
 end;
 
 end.

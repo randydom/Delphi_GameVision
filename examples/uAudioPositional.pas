@@ -76,7 +76,10 @@ interface
 
 uses
   System.SysUtils,
-  GameVision,
+  GameVision.Color,
+  GameVision.Math,
+  GameVision.Core,
+  GameVision.Game,
   uCommon;
 
 type
@@ -87,65 +90,17 @@ type
     FChan: Integer;
     FCenterPos: TGVVector;
   public
-    constructor Create; override;
-    destructor Destroy; override;
-    procedure OnPreStartup; override;
-    procedure OnPostStartup; override;
-    procedure OnLoadConfig; override;
-    procedure OnSaveConfig; override;
-    procedure OnSetSettings(var aSettings: TGVSettings); override;
+    procedure OnSetSettings(var aSettings: TGVGameSettings); override;
     procedure OnStartup; override;
     procedure OnShutdown; override;
-    procedure OnReady(aReady: Boolean); override;
     procedure OnUpdateFrame(aDeltaTime: Double); override;
-    procedure OnFixedUpdateFrame; override;
-    procedure OnStartFrame; override;
-    procedure OnEndFrame; override;
-    procedure OnClearFrame; override;
     procedure OnRenderFrame; override;
-    procedure OnRenderHUD; override;
-    procedure OnShowFrame; override;
-    procedure OnLoadVideo(const aFilename: string); override;
-    procedure OnUnloadVideo(const aFilename: string); override;
-    procedure OnStartVideo(const aFilename: string); override;
-    procedure OnFinishedVideo(const aFilename: string); override;
-    procedure OnSpeechWord(aFWord: string; aText: string); override;
   end;
 
 implementation
 
 { TAudioPositional }
-constructor TAudioPositional.Create;
-begin
-  inherited;
-end;
-
-destructor TAudioPositional.Destroy;
-begin
-  inherited;
-end;
-
-procedure TAudioPositional.OnPreStartup;
-begin
-  inherited;
-end;
-
-procedure TAudioPositional.OnPostStartup;
-begin
-  inherited;
-end;
-
-procedure TAudioPositional.OnLoadConfig;
-begin
-  inherited;
-end;
-
-procedure TAudioPositional.OnSaveConfig;
-begin
-  inherited;
-end;
-
-procedure TAudioPositional.OnSetSettings(var aSettings: TGVSettings);
+procedure TAudioPositional.OnSetSettings(var aSettings: TGVGameSettings);
 begin
   inherited;
   aSettings.WindowTitle := 'GameVision - Positional Audio';
@@ -170,35 +125,10 @@ begin
   inherited;
 end;
 
-procedure TAudioPositional.OnReady(aReady: Boolean);
-begin
-  inherited;
-end;
-
 procedure TAudioPositional.OnUpdateFrame(aDeltaTime: Double);
 begin
   inherited;
   GV.Audio.SetChannelPosition(FChan, MousePos.X, MousePos.Y);
-end;
-
-procedure TAudioPositional.OnFixedUpdateFrame;
-begin
-  inherited;
-end;
-
-procedure TAudioPositional.OnStartFrame;
-begin
-  inherited;
-end;
-
-procedure TAudioPositional.OnEndFrame;
-begin
-  inherited;
-end;
-
-procedure TAudioPositional.OnClearFrame;
-begin
-  inherited;
 end;
 
 procedure TAudioPositional.OnRenderFrame;
@@ -215,41 +145,6 @@ begin
 
   GV.Primitive.Line(0, MousePos.Y, Settings.WindowWidth-1, MousePos.Y, YELLOW, 1);
   GV.Primitive.Line(MousePos.X, 0, MousePos.X, Settings.WindowHeight-1, YELLOW, 1);
-end;
-
-procedure TAudioPositional.OnRenderHUD;
-begin
-  inherited;
-end;
-
-procedure TAudioPositional.OnShowFrame;
-begin
-  inherited;
-end;
-
-procedure TAudioPositional.OnLoadVideo(const aFilename: string);
-begin
-  inherited;
-end;
-
-procedure TAudioPositional.OnUnloadVideo(const aFilename: string);
-begin
-  inherited;
-end;
-
-procedure TAudioPositional.OnStartVideo(const aFilename: string);
-begin
-  inherited;
-end;
-
-procedure TAudioPositional.OnFinishedVideo(const aFilename: string);
-begin
-  inherited;
-end;
-
-procedure TAudioPositional.OnSpeechWord(aFWord: string; aText: string);
-begin
-  inherited;
 end;
 
 end.

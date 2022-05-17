@@ -76,7 +76,17 @@ interface
 
 uses
   System.SysUtils,
-  GameVision,
+  GameVision.Common,
+  GameVision.Color,
+  GameVision.Math,
+  GameVision.Texture,
+  GameVision.Window,
+  GameVision.Actor,
+  GameVision.EntityActor,
+  GameVision.Input,
+  GameVision.Audio,
+  GameVision.Core,
+  GameVision.Game,
   uCommon;
 
 const
@@ -246,26 +256,12 @@ type
     constructor Create; override;
     destructor Destroy; override;
     procedure OnPreStartup; override;
-    procedure OnPostStartup; override;
-    procedure OnLoadConfig; override;
-    procedure OnSaveConfig; override;
-    procedure OnSetSettings(var aSettings: TGVSettings); override;
+    procedure OnSetSettings(var aSettings: TGVGameSettings); override;
     procedure OnStartup; override;
     procedure OnShutdown; override;
-    procedure OnReady(aReady: Boolean); override;
     procedure OnUpdateFrame(aDeltaTime: Double); override;
-    procedure OnFixedUpdateFrame; override;
-    procedure OnStartFrame; override;
-    procedure OnEndFrame; override;
-    procedure OnClearFrame; override;
     procedure OnRenderFrame; override;
     procedure OnRenderHUD; override;
-    procedure OnShowFrame; override;
-    procedure OnLoadVideo(const aFilename: string); override;
-    procedure OnUnloadVideo(const aFilename: string); override;
-    procedure OnStartVideo(const aFilename: string); override;
-    procedure OnFinishedVideo(const aFilename: string); override;
-    procedure OnSpeechWord(aFWord: string; aText: string); override;
     procedure OnBeforeRenderScene(aSceneNum: Integer); override;
     procedure OnAfterRenderScene(aSceneNum: Integer); override;
     procedure SpawnRocks;
@@ -845,22 +841,7 @@ begin
   inherited;
 end;
 
-procedure TAstroBlaster.OnPostStartup;
-begin
-  inherited;
-end;
-
-procedure TAstroBlaster.OnLoadConfig;
-begin
-  inherited;
-end;
-
-procedure TAstroBlaster.OnSaveConfig;
-begin
-  inherited;
-end;
-
-procedure TAstroBlaster.OnSetSettings(var aSettings: TGVSettings);
+procedure TAstroBlaster.OnSetSettings(var aSettings: TGVGameSettings);
 begin
   inherited;
   aSettings.WindowTitle := 'GameVision - AstroBlaster Demo';
@@ -985,11 +966,6 @@ begin
   inherited;
 end;
 
-procedure TAstroBlaster.OnReady(aReady: Boolean);
-begin
-  inherited;
-end;
-
 procedure TAstroBlaster.OnUpdateFrame(aDeltaTime: Double);
 var
   LP: TGVVector;
@@ -1009,26 +985,6 @@ begin
   end;
 end;
 
-procedure TAstroBlaster.OnFixedUpdateFrame;
-begin
-  inherited;
-end;
-
-procedure TAstroBlaster.OnStartFrame;
-begin
-  inherited;
-end;
-
-procedure TAstroBlaster.OnEndFrame;
-begin
-  inherited;
-end;
-
-procedure TAstroBlaster.OnClearFrame;
-begin
-  inherited;
-end;
-
 const
   mBM = 3;
 
@@ -1037,7 +993,7 @@ begin
   // render background
   Background[0].DrawTiled(-(FBkPos.X/1.9*mBM), -(FBkPos.Y/1.9*mBM));
 
-  GV.Window.SetBlendMode(TGVBlendMode.AdditiveAlpha);
+  GV.Window.SetBlendMode(bmAdditiveAlpha);
   Background[1].DrawTiled(-(FBkPos.X/1.9*mBM), -(FBkPos.Y/1.9*mBM));
   GV.Window.RestoreDefaultBlendMode;
   Background[2].DrawTiled(-(FBkPos.X/1.6*mBM), -(FBkPos.Y/1.6*mBM));
@@ -1050,41 +1006,11 @@ procedure TAstroBlaster.OnRenderHUD;
 begin
   inherited;
 
-  HudText(Font, GREEN,  TGVHAlign.Left, HudTextItem('Left', 'Rotate left'), []);
-  HudText(Font, GREEN,  TGVHAlign.Left, HudTextItem('Right', 'Rotate right'), []);
-  HudText(Font, GREEN,  TGVHAlign.Left, HudTextItem('Up', 'Thrust'), []);
-  HudText(Font, GREEN,  TGVHAlign.Left, HudTextItem('Ctrl', 'Fire'), []);
-  HudText(Font, YELLOW, TGVHAlign.Left, HudTextItem('Count:', ' %d', ''), [Scene[cSceneRocks].Count]);
-end;
-
-procedure TAstroBlaster.OnShowFrame;
-begin
-  inherited;
-end;
-
-procedure TAstroBlaster.OnLoadVideo(const aFilename: string);
-begin
-  inherited;
-end;
-
-procedure TAstroBlaster.OnUnloadVideo(const aFilename: string);
-begin
-  inherited;
-end;
-
-procedure TAstroBlaster.OnStartVideo(const aFilename: string);
-begin
-  inherited;
-end;
-
-procedure TAstroBlaster.OnFinishedVideo(const aFilename: string);
-begin
-  inherited;
-end;
-
-procedure TAstroBlaster.OnSpeechWord(aFWord: string; aText: string);
-begin
-  inherited;
+  HudText(Font, GREEN,  haLeft, HudTextItem('Left', 'Rotate left'), []);
+  HudText(Font, GREEN,  haLeft, HudTextItem('Right', 'Rotate right'), []);
+  HudText(Font, GREEN,  haLeft, HudTextItem('Up', 'Thrust'), []);
+  HudText(Font, GREEN,  haLeft, HudTextItem('Ctrl', 'Fire'), []);
+  HudText(Font, YELLOW, haLeft, HudTextItem('Count:', ' %d', ''), [Scene[cSceneRocks].Count]);
 end;
 
 procedure TAstroBlaster.OnBeforeRenderScene(aSceneNum: Integer);
@@ -1092,7 +1018,7 @@ begin
   case aSceneNum of
     cSceneRockExp:
     begin
-      GV.Window.SetBlendMode(TGVBlendMode.AdditiveAlpha);
+      GV.Window.SetBlendMode(bmAdditiveAlpha);
     end
   else
     //TBitmap.EnableDrawDeferred(True);

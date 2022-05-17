@@ -58,9 +58,8 @@ program Entity;
 
 uses
   System.SysUtils,
-  uEntity in 'uEntity.pas',
-  uCommon in 'uCommon.pas',
-  GameVision in '..\sources\GameVision.pas';
+  GameVision.Game,
+  uEntity in 'uEntity.pas';
 
 begin
   // Your game execution starts with a call to GVRunGame. You simply pass in

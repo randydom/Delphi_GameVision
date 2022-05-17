@@ -77,7 +77,13 @@ interface
 uses
   System.SysUtils,
   System.IOUtils,
-  GameVision,
+  GameVision.Common,
+  GameVision.Color,
+  GameVision.Math,
+  GameVision.Texture,
+  GameVision.Input,
+  GameVision.Game,
+  GameVision.Core,
   uCommon;
 
 type
@@ -89,66 +95,20 @@ type
     FPos: TGVVector;
     FFilename: string;
   public
-    constructor Create; override;
-    destructor Destroy; override;
-    procedure OnPreStartup; override;
-    procedure OnPostStartup; override;
-    procedure OnLoadConfig; override;
-    procedure OnSaveConfig; override;
-    procedure OnSetSettings(var aSettings: TGVSettings); override;
+    procedure OnSetSettings(var aSettings: TGVGameSettings); override;
     procedure OnStartup; override;
     procedure OnShutdown; override;
-    procedure OnReady(aReady: Boolean); override;
     procedure OnUpdateFrame(aDeltaTime: Double); override;
-    procedure OnFixedUpdateFrame; override;
-    procedure OnStartFrame; override;
-    procedure OnEndFrame; override;
-    procedure OnClearFrame; override;
     procedure OnRenderFrame; override;
     procedure OnRenderHUD; override;
     procedure OnShowFrame; override;
-    procedure OnLoadVideo(const aFilename: string); override;
-    procedure OnUnloadVideo(const aFilename: string); override;
-    procedure OnStartVideo(const aFilename: string); override;
-    procedure OnFinishedVideo(const aFilename: string); override;
-    procedure OnSpeechWord(aFWord: string; aText: string); override;
     procedure OnScreenshot(const aFilename: string); override;
   end;
 
 implementation
 
 { TScreenshot }
-constructor TScreenshot.Create;
-begin
-  inherited;
-end;
-
-destructor TScreenshot.Destroy;
-begin
-  inherited;
-end;
-
-procedure TScreenshot.OnPreStartup;
-begin
-  inherited;
-end;
-
-procedure TScreenshot.OnPostStartup;
-begin
-  inherited;
-end;
-
-procedure TScreenshot.OnLoadConfig;
-begin
-  inherited;
-end;
-
-procedure TScreenshot.OnSaveConfig;
-begin
-  inherited;
-end;
-
-procedure TScreenshot.OnSetSettings(var aSettings: TGVSettings);
+procedure TScreenshot.OnSetSettings(var aSettings: TGVGameSettings);
 begin
   inherited;
   aSettings.WindowTitle := 'GameVision - Screenshot';
@@ -171,11 +131,6 @@ begin
   inherited;
 end;
 
-procedure TScreenshot.OnReady(aReady: Boolean);
-begin
-  inherited;
-end;
-
 procedure TScreenshot.OnUpdateFrame(aDeltaTime: Double);
 begin
   inherited;
@@ -189,26 +144,6 @@ begin
     GV.Screenshot.Take;
 end;
 
-procedure TScreenshot.OnFixedUpdateFrame;
-begin
-  inherited;
-end;
-
-procedure TScreenshot.OnStartFrame;
-begin
-  inherited;
-end;
-
-procedure TScreenshot.OnEndFrame;
-begin
-  inherited;
-end;
-
-procedure TScreenshot.OnClearFrame;
-begin
-  inherited;
-end;
-
 procedure TScreenshot.OnRenderFrame;
 begin
   inherited;
@@ -219,40 +154,15 @@ end;
 procedure TScreenshot.OnRenderHUD;
 begin
   inherited;
-  HudText(Font, GREEN, TGVHAlign.Left, HudTextItem('S', 'Screenshot'), []);
-  HudText(Font, YELLOW, TGVHAlign.Left, HudTextItem('File', '%s'), [TPath.GetFileName(FFilename)]);
+  HudText(Font, GREEN, haLeft, HudTextItem('S', 'Screenshot'), []);
+  HudText(Font, YELLOW, haLeft, HudTextItem('File', '%s'), [TPath.GetFileName(FFilename)]);
 end;
 
 procedure TScreenshot.OnShowFrame;
 begin
   // display scaled down version of last screen image
-  FScreenshotImage.Draw(GV.Window.Width/2, GV.Window.Height/2, 0.5, 0, WHITE, TGVHAlign.Center, TGVVAlign.Center);
+  FScreenshotImage.Draw(GV.Window.Width/2, GV.Window.Height/2, 0.5, 0, WHITE, haCenter, vaCenter);
 
-  inherited;
-end;
-
-procedure TScreenshot.OnLoadVideo(const aFilename: string);
-begin
-  inherited;
-end;
-
-procedure TScreenshot.OnUnloadVideo(const aFilename: string);
-begin
-  inherited;
-end;
-
-procedure TScreenshot.OnStartVideo(const aFilename: string);
-begin
-  inherited;
-end;
-
-procedure TScreenshot.OnFinishedVideo(const aFilename: string);
-begin
-  inherited;
-end;
-
-procedure TScreenshot.OnSpeechWord(aFWord: string; aText: string);
-begin
   inherited;
 end;
 

@@ -76,7 +76,7 @@ interface
 
 uses
   System.SysUtils,
-  GameVision,
+  GameVision.Game,
   uCommon;
 
 type
@@ -90,7 +90,7 @@ type
     procedure OnPostStartup; override;
     procedure OnLoadConfig; override;
     procedure OnSaveConfig; override;
-    procedure OnSetSettings(var aSettings: TGVSettings); override;
+    procedure OnSetSettings(var aSettings: TGVGameSettings); override;
     procedure OnStartup; override;
     procedure OnShutdown; override;
     procedure OnReady(aReady: Boolean); override;
@@ -142,7 +142,7 @@ begin
   inherited;
 end;
 
-procedure TExampleTemplate.OnSetSettings(var aSettings: TGVSettings);
+procedure TExampleTemplate.OnSetSettings(var aSettings: TGVGameSettings);
 begin
   inherited;
   aSettings.WindowTitle := 'TExampleTemplate';

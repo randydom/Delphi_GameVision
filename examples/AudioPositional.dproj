@@ -120,8 +120,6 @@
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
         <DCCReference Include="uAudioPositional.pas"/>
-        <DCCReference Include="uCommon.pas"/>
-        <DCCReference Include="..\sources\GameVision.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

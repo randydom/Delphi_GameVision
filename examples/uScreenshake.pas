@@ -76,7 +76,12 @@ interface
 
 uses
   System.SysUtils,
-  GameVision,
+  GameVision.Common,
+  GameVision.Color,
+  GameVision.Input,
+  GameVision.Starfield,
+  GameVision.Core,
+  GameVision.Game,
   uCommon;
 
 type
@@ -85,65 +90,18 @@ type
   protected
     FStarfield: TGVStarfield;
   public
-    constructor Create; override;
-    destructor Destroy; override;
-    procedure OnPreStartup; override;
-    procedure OnPostStartup; override;
-    procedure OnLoadConfig; override;
-    procedure OnSaveConfig; override;
-    procedure OnSetSettings(var aSettings: TGVSettings); override;
+    procedure OnSetSettings(var aSettings: TGVGameSettings); override;
     procedure OnStartup; override;
     procedure OnShutdown; override;
-    procedure OnReady(aReady: Boolean); override;
     procedure OnUpdateFrame(aDeltaTime: Double); override;
-    procedure OnFixedUpdateFrame; override;
-    procedure OnStartFrame; override;
-    procedure OnEndFrame; override;
-    procedure OnClearFrame; override;
     procedure OnRenderFrame; override;
     procedure OnRenderHUD; override;
-    procedure OnShowFrame; override;
-    procedure OnLoadVideo(const aFilename: string); override;
-    procedure OnUnloadVideo(const aFilename: string); override;
-    procedure OnStartVideo(const aFilename: string); override;
-    procedure OnFinishedVideo(const aFilename: string); override;
-    procedure OnSpeechWord(aFWord: string; aText: string); override;
   end;
 
 implementation
 
 { TExampleTemplate }
-constructor TScreenshake.Create;
-begin
-  inherited;
-end;
-
-destructor TScreenshake.Destroy;
-begin
-  inherited;
-end;
-
-procedure TScreenshake.OnPreStartup;
-begin
-  inherited;
-end;
-
-procedure TScreenshake.OnPostStartup;
-begin
-  inherited;
-end;
-
-procedure TScreenshake.OnLoadConfig;
-begin
-  inherited;
-end;
-
-procedure TScreenshake.OnSaveConfig;
-begin
-  inherited;
-end;
-
-procedure TScreenshake.OnSetSettings(var aSettings: TGVSettings);
+procedure TScreenshake.OnSetSettings(var aSettings: TGVGameSettings);
 begin
   inherited;
   aSettings.WindowTitle := 'GameVision - Screenshake';
@@ -162,11 +120,6 @@ begin
   inherited;
 end;
 
-procedure TScreenshake.OnReady(aReady: Boolean);
-begin
-  inherited;
-end;
-
 procedure TScreenshake.OnUpdateFrame(aDeltaTime: Double);
 begin
   inherited;
@@ -175,26 +128,6 @@ begin
     GV.Screenshake.Start(60, 5);
 
   FStarfield.Update(aDeltaTime);
-end;
-
-procedure TScreenshake.OnFixedUpdateFrame;
-begin
-  inherited;
-end;
-
-procedure TScreenshake.OnStartFrame;
-begin
-  inherited;
-end;
-
-procedure TScreenshake.OnEndFrame;
-begin
-  inherited;
-end;
-
-procedure TScreenshake.OnClearFrame;
-begin
-  inherited;
 end;
 
 procedure TScreenshake.OnRenderFrame;
@@ -206,37 +139,7 @@ end;
 procedure TScreenshake.OnRenderHUD;
 begin
   inherited;
-  HudText(Font, GREEN, TGVHAlign.Left, HudTextItem('S', 'Screenshake'), []);
-end;
-
-procedure TScreenshake.OnShowFrame;
-begin
-  inherited;
-end;
-
-procedure TScreenshake.OnLoadVideo(const aFilename: string);
-begin
-  inherited;
-end;
-
-procedure TScreenshake.OnUnloadVideo(const aFilename: string);
-begin
-  inherited;
-end;
-
-procedure TScreenshake.OnStartVideo(const aFilename: string);
-begin
-  inherited;
-end;
-
-procedure TScreenshake.OnFinishedVideo(const aFilename: string);
-begin
-  inherited;
-end;
-
-procedure TScreenshake.OnSpeechWord(aFWord: string; aText: string);
-begin
-  inherited;
+  HudText(Font, GREEN, haLeft, HudTextItem('S', 'Screenshake'), []);
 end;
 
 end.

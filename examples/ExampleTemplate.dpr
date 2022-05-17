@@ -52,15 +52,17 @@ POSSIBILITY OF SUCH DAMAGE.
 
 program ExampleTemplate;
 
+{$I GameVision.Defines.inc}
+
 {$APPTYPE CONSOLE}
 
 {$R *.res}
 
 uses
   System.SysUtils,
+  GameVision.Game,
   uExampleTemplate in 'uExampleTemplate.pas',
-  uCommon in 'uCommon.pas',
-  GameVision in '..\sources\GameVision.pas';
+  uCommon in 'uCommon.pas';
 
 begin
   // Your game execution starts with a call to GVRunGame. You simply pass in

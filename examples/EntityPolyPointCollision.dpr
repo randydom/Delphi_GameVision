@@ -58,9 +58,8 @@ program EntityPolyPointCollision;
 
 uses
   System.SysUtils,
-  uEntityPolyPointCollision in 'uEntityPolyPointCollision.pas',
-  uCommon in 'uCommon.pas',
-  GameVision in '..\sources\GameVision.pas';
+  GameVision.Game,
+  uEntityPolyPointCollision in 'uEntityPolyPointCollision.pas';
 
 begin
   // Your game execution starts with a call to GVRunGame. You simply pass in

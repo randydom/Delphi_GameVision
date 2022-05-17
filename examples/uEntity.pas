@@ -76,7 +76,9 @@ interface
 
 uses
   System.SysUtils,
-  GameVision,
+  GameVision.Entity,
+  GameVision.Core,
+  GameVision.Game,
   uCommon;
 
 type
@@ -85,65 +87,17 @@ type
   protected
     FEntity: TGVEntity;
   public
-    constructor Create; override;
-    destructor Destroy; override;
-    procedure OnPreStartup; override;
-    procedure OnPostStartup; override;
-    procedure OnLoadConfig; override;
-    procedure OnSaveConfig; override;
-    procedure OnSetSettings(var aSettings: TGVSettings); override;
+    procedure OnSetSettings(var aSettings: TGVGameSettings); override;
     procedure OnStartup; override;
     procedure OnShutdown; override;
-    procedure OnReady(aReady: Boolean); override;
     procedure OnUpdateFrame(aDeltaTime: Double); override;
-    procedure OnFixedUpdateFrame; override;
-    procedure OnStartFrame; override;
-    procedure OnEndFrame; override;
-    procedure OnClearFrame; override;
     procedure OnRenderFrame; override;
-    procedure OnRenderHUD; override;
-    procedure OnShowFrame; override;
-    procedure OnLoadVideo(const aFilename: string); override;
-    procedure OnUnloadVideo(const aFilename: string); override;
-    procedure OnStartVideo(const aFilename: string); override;
-    procedure OnFinishedVideo(const aFilename: string); override;
-    procedure OnSpeechWord(aFWord: string; aText: string); override;
   end;
 
 implementation
 
 { TEntity }
-constructor TEntity.Create;
-begin
-  inherited;
-end;
-
-destructor TEntity.Destroy;
-begin
-  inherited;
-end;
-
-procedure TEntity.OnPreStartup;
-begin
-  inherited;
-end;
-
-procedure TEntity.OnPostStartup;
-begin
-  inherited;
-end;
-
-procedure TEntity.OnLoadConfig;
-begin
-  inherited;
-end;
-
-procedure TEntity.OnSaveConfig;
-begin
-  inherited;
-end;
-
-procedure TEntity.OnSetSettings(var aSettings: TGVSettings);
+procedure TEntity.OnSetSettings(var aSettings: TGVGameSettings);
 begin
   inherited;
   aSettings.WindowTitle := 'GameVision - Entity';
@@ -169,11 +123,7 @@ end;
 
 procedure TEntity.OnShutdown;
 begin
-  inherited;
-end;
-
-procedure TEntity.OnReady(aReady: Boolean);
-begin
+  FreeAndNil(FEntity);
   inherited;
 end;
 
@@ -183,65 +133,10 @@ begin
   FEntity.NextFrame;
 end;
 
-procedure TEntity.OnFixedUpdateFrame;
-begin
-  inherited;
-end;
-
-procedure TEntity.OnStartFrame;
-begin
-  inherited;
-end;
-
-procedure TEntity.OnEndFrame;
-begin
-  inherited;
-end;
-
-procedure TEntity.OnClearFrame;
-begin
-  inherited;
-end;
-
 procedure TEntity.OnRenderFrame;
 begin
   inherited;
   FEntity.Render(0, 0);
-end;
-
-procedure TEntity.OnRenderHUD;
-begin
-  inherited;
-end;
-
-procedure TEntity.OnShowFrame;
-begin
-  inherited;
-end;
-
-procedure TEntity.OnLoadVideo(const aFilename: string);
-begin
-  inherited;
-end;
-
-procedure TEntity.OnUnloadVideo(const aFilename: string);
-begin
-  inherited;
-end;
-
-procedure TEntity.OnStartVideo(const aFilename: string);
-begin
-  inherited;
-end;
-
-procedure TEntity.OnFinishedVideo(const aFilename: string);
-begin
-  inherited;
-end;
-
-procedure TEntity.OnSpeechWord(aFWord: string; aText: string);
-begin
-  inherited;
 end;
 
 end.

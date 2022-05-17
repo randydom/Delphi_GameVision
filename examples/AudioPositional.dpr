@@ -58,9 +58,8 @@ program AudioPositional;
 
 uses
   System.SysUtils,
-  uAudioPositional in 'uAudioPositional.pas',
-  uCommon in 'uCommon.pas',
-  GameVision in '..\sources\GameVision.pas';
+  GameVision.Game,
+  uAudioPositional in 'uAudioPositional.pas';
 
 begin
   // Your game execution starts with a call to GVRunGame. You simply pass in

@@ -76,7 +76,12 @@ interface
 
 uses
   System.SysUtils,
-  GameVision,
+  GameVision.Common,
+  GameVision.Color,
+  GameVision.Math,
+  GameVision.Entity,
+  GameVision.Core,
+  GameVision.Game,
   uCommon;
 
 type
@@ -89,65 +94,17 @@ type
     FFigureAngle: Single;
     FCollide: Boolean;
   public
-    constructor Create; override;
-    destructor Destroy; override;
-    procedure OnPreStartup; override;
-    procedure OnPostStartup; override;
-    procedure OnLoadConfig; override;
-    procedure OnSaveConfig; override;
-    procedure OnSetSettings(var aSettings: TGVSettings); override;
+    procedure OnSetSettings(var aSettings: TGVGameSettings); override;
     procedure OnStartup; override;
     procedure OnShutdown; override;
-    procedure OnReady(aReady: Boolean); override;
     procedure OnUpdateFrame(aDeltaTime: Double); override;
-    procedure OnFixedUpdateFrame; override;
-    procedure OnStartFrame; override;
-    procedure OnEndFrame; override;
-    procedure OnClearFrame; override;
     procedure OnRenderFrame; override;
-    procedure OnRenderHUD; override;
-    procedure OnShowFrame; override;
-    procedure OnLoadVideo(const aFilename: string); override;
-    procedure OnUnloadVideo(const aFilename: string); override;
-    procedure OnStartVideo(const aFilename: string); override;
-    procedure OnFinishedVideo(const aFilename: string); override;
-    procedure OnSpeechWord(aFWord: string; aText: string); override;
   end;
 
 implementation
 
 { TEntityPolyPointCollision }
-constructor TEntityPolyPointCollision.Create;
-begin
-  inherited;
-end;
-
-destructor TEntityPolyPointCollision.Destroy;
-begin
-  inherited;
-end;
-
-procedure TEntityPolyPointCollision.OnPreStartup;
-begin
-  inherited;
-end;
-
-procedure TEntityPolyPointCollision.OnPostStartup;
-begin
-  inherited;
-end;
-
-procedure TEntityPolyPointCollision.OnLoadConfig;
-begin
-  inherited;
-end;
-
-procedure TEntityPolyPointCollision.OnSaveConfig;
-begin
-  inherited;
-end;
-
-procedure TEntityPolyPointCollision.OnSetSettings(var aSettings: TGVSettings);
+procedure TEntityPolyPointCollision.OnSetSettings(var aSettings: TGVGameSettings);
 begin
   inherited;
   aSettings.WindowTitle := 'GameVision - Entity PolyPoint Collision';
@@ -195,11 +152,6 @@ begin
   inherited;
 end;
 
-procedure TEntityPolyPointCollision.OnReady(aReady: Boolean);
-begin
-  inherited;
-end;
-
 procedure TEntityPolyPointCollision.OnUpdateFrame(aDeltaTime: Double);
 begin
   inherited;
@@ -217,26 +169,6 @@ begin
 
 end;
 
-procedure TEntityPolyPointCollision.OnFixedUpdateFrame;
-begin
-  inherited;
-end;
-
-procedure TEntityPolyPointCollision.OnStartFrame;
-begin
-  inherited;
-end;
-
-procedure TEntityPolyPointCollision.OnEndFrame;
-begin
-  inherited;
-end;
-
-procedure TEntityPolyPointCollision.OnClearFrame;
-begin
-  inherited;
-end;
-
 procedure TEntityPolyPointCollision.OnRenderFrame;
 begin
   inherited;
@@ -244,41 +176,6 @@ begin
   FBoss.Render(0, 0);
   if FCollide then
     GV.Primitive.FilledRectangle(FHitPos.X, FHitPos.Y, 10, 10, RED);
-end;
-
-procedure TEntityPolyPointCollision.OnRenderHUD;
-begin
-  inherited;
-end;
-
-procedure TEntityPolyPointCollision.OnShowFrame;
-begin
-  inherited;
-end;
-
-procedure TEntityPolyPointCollision.OnLoadVideo(const aFilename: string);
-begin
-  inherited;
-end;
-
-procedure TEntityPolyPointCollision.OnUnloadVideo(const aFilename: string);
-begin
-  inherited;
-end;
-
-procedure TEntityPolyPointCollision.OnStartVideo(const aFilename: string);
-begin
-  inherited;
-end;
-
-procedure TEntityPolyPointCollision.OnFinishedVideo(const aFilename: string);
-begin
-  inherited;
-end;
-
-procedure TEntityPolyPointCollision.OnSpeechWord(aFWord: string; aText: string);
-begin
-  inherited;
 end;
 
 end.

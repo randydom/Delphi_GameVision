@@ -76,7 +76,12 @@ interface
 
 uses
   System.SysUtils,
-  GameVision,
+  GameVision.Common,
+  GameVision.Color,
+  GameVision.Math,
+  GameVision.Texture,
+  GameVision.Game,
+  GameVision.Core,
   uCommon;
 
 const
@@ -91,65 +96,18 @@ type
     FTexture: TGVTexture;
     FScale: TGVVector;
   public
-    constructor Create; override;
-    destructor Destroy; override;
-    procedure OnPreStartup; override;
-    procedure OnPostStartup; override;
-    procedure OnLoadConfig; override;
-    procedure OnSaveConfig; override;
-    procedure OnSetSettings(var aSettings: TGVSettings); override;
+    procedure OnSetSettings(var aSettings: TGVGameSettings); override;
     procedure OnStartup; override;
     procedure OnShutdown; override;
-    procedure OnReady(aReady: Boolean); override;
     procedure OnUpdateFrame(aDeltaTime: Double); override;
-    procedure OnFixedUpdateFrame; override;
-    procedure OnStartFrame; override;
-    procedure OnEndFrame; override;
-    procedure OnClearFrame; override;
     procedure OnRenderFrame; override;
     procedure OnRenderHUD; override;
-    procedure OnShowFrame; override;
-    procedure OnLoadVideo(const aFilename: string); override;
-    procedure OnUnloadVideo(const aFilename: string); override;
-    procedure OnStartVideo(const aFilename: string); override;
-    procedure OnFinishedVideo(const aFilename: string); override;
-    procedure OnSpeechWord(aFWord: string; aText: string); override;
   end;
 
 implementation
 
 { TTextureScaled }
-constructor TTextureScaled.Create;
-begin
-  inherited;
-end;
-
-destructor TTextureScaled.Destroy;
-begin
-  inherited;
-end;
-
-procedure TTextureScaled.OnPreStartup;
-begin
-  inherited;
-end;
-
-procedure TTextureScaled.OnPostStartup;
-begin
-  inherited;
-end;
-
-procedure TTextureScaled.OnLoadConfig;
-begin
-  inherited;
-end;
-
-procedure TTextureScaled.OnSaveConfig;
-begin
-  inherited;
-end;
-
-procedure TTextureScaled.OnSetSettings(var aSettings: TGVSettings);
+procedure TTextureScaled.OnSetSettings(var aSettings: TGVGameSettings);
 begin
   inherited;
   aSettings.WindowTitle := 'GameVision - Scaled Texture';
@@ -169,11 +127,6 @@ begin
   inherited;
 end;
 
-procedure TTextureScaled.OnReady(aReady: Boolean);
-begin
-  inherited;
-end;
-
 procedure TTextureScaled.OnUpdateFrame(aDeltaTime: Double);
 begin
   inherited;
@@ -187,68 +140,18 @@ begin
   GV.Math.ClipValue(FScale.W, cScaleMin, cScaleMax, False);
 end;
 
-procedure TTextureScaled.OnFixedUpdateFrame;
-begin
-  inherited;
-end;
-
-procedure TTextureScaled.OnStartFrame;
-begin
-  inherited;
-end;
-
-procedure TTextureScaled.OnEndFrame;
-begin
-  inherited;
-end;
-
-procedure TTextureScaled.OnClearFrame;
-begin
-  inherited;
-end;
-
 procedure TTextureScaled.OnRenderFrame;
 begin
   inherited;
-  FTexture.Draw(GV.Window.Width/2, GV.Window.Height/2, FScale.W, 0, WHITE, TGVHAlign.Center, TGVVAlign.Center);
+  FTexture.Draw(GV.Window.Width/2, GV.Window.Height/2, FScale.W, 0, WHITE, haCenter, vaCenter);
 end;
 
 procedure TTextureScaled.OnRenderHUD;
 begin
   inherited;
-  HudText(Font, GREEN, TGVHAlign.Left, HudTextItem('Up', 'Scale up'), []);
-  HudText(Font, GREEN, TGVHAlign.Left, HudTextItem('Down', 'Scale down'), []);
-  HudText(Font, YELLOW, TGVHAlign.Left, HudTextItem('Scale', '%.2f'), [FScale.W]);
-end;
-
-procedure TTextureScaled.OnShowFrame;
-begin
-  inherited;
-end;
-
-procedure TTextureScaled.OnLoadVideo(const aFilename: string);
-begin
-  inherited;
-end;
-
-procedure TTextureScaled.OnUnloadVideo(const aFilename: string);
-begin
-  inherited;
-end;
-
-procedure TTextureScaled.OnStartVideo(const aFilename: string);
-begin
-  inherited;
-end;
-
-procedure TTextureScaled.OnFinishedVideo(const aFilename: string);
-begin
-  inherited;
-end;
-
-procedure TTextureScaled.OnSpeechWord(aFWord: string; aText: string);
-begin
-  inherited;
+  HudText(Font, GREEN, haLeft, HudTextItem('Up', 'Scale up'), []);
+  HudText(Font, GREEN, haLeft, HudTextItem('Down', 'Scale down'), []);
+  HudText(Font, YELLOW, haLeft, HudTextItem('Scale', '%.2f'), [FScale.W]);
 end;
 
 end.

@@ -56,7 +56,9 @@ interface
 
 uses
   System.SysUtils,
-  GameVision;
+  GameVision.Common,
+  GameVision.Game,
+  GameVision.Color;
 
 const
   cArchivePassword = 'ab870994de394389836f316da16add68';
@@ -73,7 +75,7 @@ type
     procedure OnPostStartup; override;
     procedure OnLoadConfig; override;
     procedure OnSaveConfig; override;
-    procedure OnSetSettings(var aSettings: TGVSettings); override;
+    procedure OnSetSettings(var aSettings: TGVGameSettings); override;
     procedure OnStartup; override;
     procedure OnShutdown; override;
     procedure OnReady(aReady: Boolean); override;
@@ -125,7 +127,7 @@ begin
   inherited;
 end;
 
-procedure TBaseExample.OnSetSettings(var aSettings: TGVSettings);
+procedure TBaseExample.OnSetSettings(var aSettings: TGVGameSettings);
 begin
   inherited;
 
@@ -191,8 +193,8 @@ end;
 procedure TBaseExample.OnRenderHUD;
 begin
   HudResetPos;
-  HudText(FFont, WHITE, TGVHAlign.Left, 'fps %d', [GetFrameRate]);
-  HudText(FFont, GREEN, TGVHAlign.Left, HudTextItem('ESC', 'Quit'), []);
+  HudText(FFont, WHITE, haLeft, 'fps %d', [GetFrameRate]);
+  HudText(FFont, GREEN, haLeft, HudTextItem('ESC', 'Quit'), []);
 end;
 
 procedure TBaseExample.OnShowFrame;

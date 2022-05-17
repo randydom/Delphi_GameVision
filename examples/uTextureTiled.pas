@@ -76,7 +76,9 @@ interface
 
 uses
   System.SysUtils,
-  GameVision,
+  GameVision.Math,
+  GameVision.Texture,
+  GameVision.Game,
   uCommon;
 
 type
@@ -86,65 +88,17 @@ type
     FTexture: TGVTexture;
     FPos: TGVVector;
   public
-    constructor Create; override;
-    destructor Destroy; override;
-    procedure OnPreStartup; override;
-    procedure OnPostStartup; override;
-    procedure OnLoadConfig; override;
-    procedure OnSaveConfig; override;
-    procedure OnSetSettings(var aSettings: TGVSettings); override;
+    procedure OnSetSettings(var aSettings: TGVGameSettings); override;
     procedure OnStartup; override;
     procedure OnShutdown; override;
-    procedure OnReady(aReady: Boolean); override;
     procedure OnUpdateFrame(aDeltaTime: Double); override;
-    procedure OnFixedUpdateFrame; override;
-    procedure OnStartFrame; override;
-    procedure OnEndFrame; override;
-    procedure OnClearFrame; override;
     procedure OnRenderFrame; override;
-    procedure OnRenderHUD; override;
-    procedure OnShowFrame; override;
-    procedure OnLoadVideo(const aFilename: string); override;
-    procedure OnUnloadVideo(const aFilename: string); override;
-    procedure OnStartVideo(const aFilename: string); override;
-    procedure OnFinishedVideo(const aFilename: string); override;
-    procedure OnSpeechWord(aFWord: string; aText: string); override;
   end;
 
 implementation
 
 { TTextureTiled }
-constructor TTextureTiled.Create;
-begin
-  inherited;
-end;
-
-destructor TTextureTiled.Destroy;
-begin
-  inherited;
-end;
-
-procedure TTextureTiled.OnPreStartup;
-begin
-  inherited;
-end;
-
-procedure TTextureTiled.OnPostStartup;
-begin
-  inherited;
-end;
-
-procedure TTextureTiled.OnLoadConfig;
-begin
-  inherited;
-end;
-
-procedure TTextureTiled.OnSaveConfig;
-begin
-  inherited;
-end;
-
-procedure TTextureTiled.OnSetSettings(var aSettings: TGVSettings);
+procedure TTextureTiled.OnSetSettings(var aSettings: TGVGameSettings);
 begin
   inherited;
   aSettings.WindowTitle := 'GameVision - Titled Texture';
@@ -164,76 +118,16 @@ begin
   inherited;
 end;
 
-procedure TTextureTiled.OnReady(aReady: Boolean);
-begin
-  inherited;
-end;
-
 procedure TTextureTiled.OnUpdateFrame(aDeltaTime: Double);
 begin
   inherited;
   FPos.Y := FPos.Y + (FPos.W * aDeltaTime);
 end;
 
-procedure TTextureTiled.OnFixedUpdateFrame;
-begin
-  inherited;
-end;
-
-procedure TTextureTiled.OnStartFrame;
-begin
-  inherited;
-end;
-
-procedure TTextureTiled.OnEndFrame;
-begin
-  inherited;
-end;
-
-procedure TTextureTiled.OnClearFrame;
-begin
-  inherited;
-end;
-
 procedure TTextureTiled.OnRenderFrame;
 begin
   inherited;
   FTexture.DrawTiled(FPos.X, FPos.Y);
-end;
-
-procedure TTextureTiled.OnRenderHUD;
-begin
-  inherited;
-end;
-
-procedure TTextureTiled.OnShowFrame;
-begin
-  inherited;
-end;
-
-procedure TTextureTiled.OnLoadVideo(const aFilename: string);
-begin
-  inherited;
-end;
-
-procedure TTextureTiled.OnUnloadVideo(const aFilename: string);
-begin
-  inherited;
-end;
-
-procedure TTextureTiled.OnStartVideo(const aFilename: string);
-begin
-  inherited;
-end;
-
-procedure TTextureTiled.OnFinishedVideo(const aFilename: string);
-begin
-  inherited;
-end;
-
-procedure TTextureTiled.OnSpeechWord(aFWord: string; aText: string);
-begin
-  inherited;
 end;
 
 end.

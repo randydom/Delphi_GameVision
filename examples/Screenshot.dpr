@@ -58,9 +58,8 @@ program Screenshot;
 
 uses
   System.SysUtils,
-  uScreenshot in 'uScreenshot.pas',
-  uCommon in 'uCommon.pas',
-  GameVision in '..\sources\GameVision.pas';
+  GameVision.Game,
+  uScreenshot in 'uScreenshot.pas';
 
 begin
   // Your game execution starts with a call to GVRunGame. You simply pass in

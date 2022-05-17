@@ -77,7 +77,11 @@ interface
 uses
   System.SysUtils,
   System.Math,
-  GameVision,
+  GameVision.Color,
+  GameVision.Texture,
+  GameVision.Math,
+  GameVision.Core,
+  GameVision.Game,
   uCommon;
 
 const
@@ -98,65 +102,17 @@ type
     FFrameTimer: Single;
     FFrame: Integer;
   public
-    constructor Create; override;
-    destructor Destroy; override;
-    procedure OnPreStartup; override;
-    procedure OnPostStartup; override;
-    procedure OnLoadConfig; override;
-    procedure OnSaveConfig; override;
-    procedure OnSetSettings(var aSettings: TGVSettings); override;
+    procedure OnSetSettings(var aSettings: TGVGameSettings); override;
     procedure OnStartup; override;
     procedure OnShutdown; override;
-    procedure OnReady(aReady: Boolean); override;
     procedure OnUpdateFrame(aDeltaTime: Double); override;
-    procedure OnFixedUpdateFrame; override;
-    procedure OnStartFrame; override;
-    procedure OnEndFrame; override;
-    procedure OnClearFrame; override;
     procedure OnRenderFrame; override;
-    procedure OnRenderHUD; override;
-    procedure OnShowFrame; override;
-    procedure OnLoadVideo(const aFilename: string); override;
-    procedure OnUnloadVideo(const aFilename: string); override;
-    procedure OnStartVideo(const aFilename: string); override;
-    procedure OnFinishedVideo(const aFilename: string); override;
-    procedure OnSpeechWord(aFWord: string; aText: string); override;
   end;
 
 implementation
 
 { TTextureRegion }
-constructor TTextureRegion.Create;
-begin
-  inherited;
-end;
-
-destructor TTextureRegion.Destroy;
-begin
-  inherited;
-end;
-
-procedure TTextureRegion.OnPreStartup;
-begin
-  inherited;
-end;
-
-procedure TTextureRegion.OnPostStartup;
-begin
-  inherited;
-end;
-
-procedure TTextureRegion.OnLoadConfig;
-begin
-  inherited;
-end;
-
-procedure TTextureRegion.OnSaveConfig;
-begin
-  inherited;
-end;
-
-procedure TTextureRegion.OnSetSettings(var aSettings: TGVSettings);
+procedure TTextureRegion.OnSetSettings(var aSettings: TGVGameSettings);
 begin
   inherited;
   aSettings.WindowTitle := 'GameVision - Texture Region';
@@ -184,11 +140,6 @@ begin
   inherited;
 end;
 
-procedure TTextureRegion.OnReady(aReady: Boolean);
-begin
-  inherited;
-end;
-
 procedure TTextureRegion.OnUpdateFrame(aDeltaTime: Double);
 begin
   inherited;
@@ -212,68 +163,12 @@ begin
   FRegion.Y := FGridPos.Y * cSpriteHeight;
 end;
 
-
-procedure TTextureRegion.OnFixedUpdateFrame;
-begin
-  inherited;
-end;
-
-procedure TTextureRegion.OnStartFrame;
-begin
-  inherited;
-end;
-
-procedure TTextureRegion.OnEndFrame;
-begin
-  inherited;
-end;
-
-procedure TTextureRegion.OnClearFrame;
-begin
-  inherited;
-end;
-
 procedure TTextureRegion.OnRenderFrame;
 begin
   inherited;
 
   // draw each sprite frame center aligned at the center of the window
   FTexture.Draw(GV.Window.Width/2, GV.Window.Height/2, @FRegion, @FCenter, nil, 0, WHITE);
-end;
-
-procedure TTextureRegion.OnRenderHUD;
-begin
-  inherited;
-end;
-
-procedure TTextureRegion.OnShowFrame;
-begin
-  inherited;
-end;
-
-procedure TTextureRegion.OnLoadVideo(const aFilename: string);
-begin
-  inherited;
-end;
-
-procedure TTextureRegion.OnUnloadVideo(const aFilename: string);
-begin
-  inherited;
-end;
-
-procedure TTextureRegion.OnStartVideo(const aFilename: string);
-begin
-  inherited;
-end;
-
-procedure TTextureRegion.OnFinishedVideo(const aFilename: string);
-begin
-  inherited;
-end;
-
-procedure TTextureRegion.OnSpeechWord(aFWord: string; aText: string);
-begin
-  inherited;
 end;
 
 end.

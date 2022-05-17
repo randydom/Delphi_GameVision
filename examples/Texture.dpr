@@ -58,9 +58,8 @@ program Texture;
 
 uses
   System.SysUtils,
-  uTexture in 'uTexture.pas',
-  uCommon in 'uCommon.pas',
-  GameVision in '..\sources\GameVision.pas';
+  GameVision.Game,
+  uTexture in 'uTexture.pas';
 
 begin
   // Your game execution starts with a call to GVRunGame. You simply pass in

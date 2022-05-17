@@ -58,7 +58,7 @@ program GVArc;
 
 uses
   System.SysUtils,
-  GameVision,
+  GameVision.Game,
   uGVArc in 'uGVArc.pas';
 
 begin

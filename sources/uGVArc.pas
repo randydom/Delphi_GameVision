@@ -57,7 +57,7 @@ interface
 uses
   System.SysUtils,
   System.IOUtils,
-  GameVision;
+  GameVision.CustomGame;
 
 type
 
@@ -73,11 +73,16 @@ type
 
 implementation
 
+uses
+  GameVision.Common,
+  GameVision.Archive,
+  GameVision.Core;
+
 { TGVArc }
 procedure TGVArc.ShowHeader;
 begin
   PrintLn;
-  PrintLn('GVArc™ Archive Utilty v%s', [GAMEVISION_VERSION]);
+  PrintLn('GVArc™ Archive Utilty v%s', [GV_VERSION]);
   PrintLn('Copyright © 2022 tinyBigGAMES™', []);
   PrintLn('All Rights Reserved.', []);
 end;

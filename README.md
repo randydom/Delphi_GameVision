@@ -44,10 +44,8 @@ It's robust, designed for easy use and suitable for making all types of 2D games
 - Unzip the archive to a desired location.
 - Add `installdir\libs`, folder to Delphi's library path so the toolkit source files can be found for any project or for a specific project add to its search path.
 - In Delphi, load `GameVision Toolkit.groupproj` to load and compile the project files.
-- Use `GVArc` utility for making archive files (standard password protected zip format). Running the `makearc.bat` in `installdir\examples\bin` will build `Data.zip` that is used by the examples.
+- Compile and use `GVArc` utility for making archive files (standard password protected zip format). Running the `makearc.bat` in `installdir\examples\bin` will build `Data.zip` that is used by the examples.
 - See examples in the `installdir\examples` for more information about usage.
-- You must include **GameVision.dll** in addition to any dependencies such as any archive files created via GVArch for example, in your project distribution.
-- **NOTE:** For your assurance, all official executables in the GameVision distro are code signed by tinyBigGAMES LLC. 
 
 ## Known Issues
 - This project is in active development so changes will be frequent 

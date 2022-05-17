@@ -58,9 +58,8 @@ program TextureScaled;
 
 uses
   System.SysUtils,
-  uTextureScaled in 'uTextureScaled.pas',
-  uCommon in 'uCommon.pas',
-  GameVision in '..\sources\GameVision.pas';
+  GameVision.Game,
+  uTextureScaled in 'uTextureScaled.pas';
 
 begin
   // Your game execution starts with a call to GVRunGame. You simply pass in

@@ -58,9 +58,8 @@ program TextureTiled;
 
 uses
   System.SysUtils,
-  uTextureTiled in 'uTextureTiled.pas',
-  uCommon in 'uCommon.pas',
-  GameVision in '..\sources\GameVision.pas';
+  GameVision.Game,
+  uTextureTiled in 'uTextureTiled.pas';
 
 begin
   // Your game execution starts with a call to GVRunGame. You simply pass in

@@ -58,7 +58,7 @@ program HelloWorld;
 
 uses
   System.SysUtils,
-  GameVision in '..\sources\GameVision.pas';
+  GameVision.Game;
 
 begin
   // Your game execution starts with a call to GVRunGame. You simply pass in
