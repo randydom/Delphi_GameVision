@@ -363,7 +363,7 @@ begin
   FRange.maxx := FRange.minx + 20;
   FRange.maxy := FRange.miny + 20;
 
-  FColor.Make(77, 157, 251, 255);
+  FColor.FromByte(77, 157, 251, 255);
 
   //GV.Get(IViewport, FHandle);
   FHandle := TGVRenderTarget.Create;

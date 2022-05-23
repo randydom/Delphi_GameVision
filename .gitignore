@@ -73,4 +73,4 @@ modules/
 *.zip
 examples/Win64
 bin/Screenshots
-!/bin/GameVision.dll
+#!/bin/GameVision.dll

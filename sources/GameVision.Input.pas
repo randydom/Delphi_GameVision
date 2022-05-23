@@ -280,6 +280,7 @@ type
   TGVInput = class(TGVObject)
   protected
     FKeyCode: Integer;
+    FKeyCodeRepeat: Boolean;
     FMouseButtons: array [0..1, 0..256] of Boolean;
     FKeyButtons: array [0..1, 0..256] of Boolean;
     FJoyStick: TGVJoystick;
@@ -290,6 +291,7 @@ type
     end;
   public
     property KeyCode: Integer read FKeyCode;
+    property KeyCodeRepeat: Boolean read FKeyCodeRepeat;
     constructor Create; override;
     destructor Destroy; override;
     procedure Clear;
@@ -400,7 +402,6 @@ procedure TGVInput.Clear;
 begin
   FillChar(FMouseButtons, SizeOf(FMouseButtons), False);
   FillChar(FKeyButtons, SizeOf(FKeyButtons), False);
-  //FillChar(FJoyButtons, SizeOf(FJoyButtons), False);
   FJoystick.Clear;
 
   if GV.Window.Handle <> nil then
@@ -411,14 +412,13 @@ end;
 
 procedure TGVInput.Update;
 begin
-  //FMouse.Postion.Clear;
-  //FMouse.Delta.Clear;
-  //FMouse.Pressure := 0;
+  FKeyCode := 0;
 
   case GV.Event.type_ of
     ALLEGRO_EVENT_KEY_CHAR:
     begin
       FKeyCode := GV.Event.keyboard.unichar;
+      FKeyCodeRepeat := GV.Event.keyboard.repeat_;
     end;
 
     ALLEGRO_EVENT_JOYSTICK_AXIS:

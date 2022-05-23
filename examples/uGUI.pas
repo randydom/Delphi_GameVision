@@ -70,24 +70,36 @@ POSSIBILITY OF SUCH DAMAGE.
     OnRenderHUD   - run game hud rendering code
 *)
 
-unit uScreenshake;
+unit uGUI;
 
 interface
 
 uses
   System.SysUtils,
-  GameVision.Common,
   GameVision.Color,
-  GameVision.Input,
   GameVision.Starfield,
+  GameVision.Audio,
+  GameVision.GUI,
   GameVision.Core,
   GameVision.Game,
   uCommon;
 
+const
+  cGuiWindowFlags: array[0..4] of Cardinal = (GUI_WINDOW_BORDER, GUI_WINDOW_MOVABLE, GUI_WINDOW_SCALABLE, GUI_WINDOW_CLOSABLE, GUI_WINDOW_TITLE);
+  cGuiThemes: array[0..4] of string = ('Default', 'White', 'Red', 'Blue', 'Dark');
+
 type
-  { TExampleTemplate }
-  TScreenshake = class(TBaseExample)
+  { TGUI }
+  TGUI = class(TBaseExample)
   protected
+    MusicVolume: Single;
+    Difficulty: Integer;
+    Chk1: Boolean;
+    Chk2: Boolean;
+    Theme: Integer;
+    ThemeChanged: Boolean;
+    FMusic: Integer;
+    FSfx: Integer;
     FStarfield: TGVStarfield;
   public
     procedure OnSetSettings(var aSettings: TGVGameSettings); override;
@@ -96,51 +108,119 @@ type
     procedure OnUpdateFrame(aDeltaTime: Double); override;
     procedure OnRenderFrame; override;
     procedure OnRenderHUD; override;
+    procedure OnProcessIMGUI; override;
   end;
 
 implementation
 
-{ TExampleTemplate }
-procedure TScreenshake.OnSetSettings(var aSettings: TGVGameSettings);
+{ TGUI }
+procedure TGUI.OnSetSettings(var aSettings: TGVGameSettings);
 begin
   inherited;
-  aSettings.WindowTitle := 'GameVision - Screenshake';
+  aSettings.WindowTitle := 'GameVision - GUI';
   aSettings.WindowClearColor := BLACK;
 end;
 
-procedure TScreenshake.OnStartup;
+procedure TGUI.OnStartup;
 begin
   inherited;
+
+  MusicVolume := 0.3;
+  Difficulty := 0;
+  Chk1 := False;
+  Chk2 := False;
+  Theme := 0;
+  ThemeChanged := False;
+
+
   FStarfield := TGVStarfield.Create;
-  //FStarfield.SetScale(GV.Window.Scale);
+  FSfx := GV.Audio.LoadSound(Archive, 'arc/sfx/digthis.ogg');
+
+  FMusic := GV.Audio.LoadMusic(Archive, 'arc/music/song07.ogg');
+  GV.Audio.PlayMusic(FMusic, MusicVolume, True);
+
+
 end;
 
-procedure TScreenshake.OnShutdown;
+procedure TGUI.OnShutdown;
 begin
+  GV.Audio.UnloadMusic(FMusic);
+  GV.Audio.UnloadSound(FSfx);
   FreeAndNil(FStarfield);
   inherited;
 end;
 
-procedure TScreenshake.OnUpdateFrame(aDeltaTime: Double);
+procedure TGUI.OnUpdateFrame(aDeltaTime: Double);
 begin
   inherited;
-
-  if GV.Input.KeyPressed(KEY_S) then
-    GV.Screenshake.Start(60, 5);
-
   FStarfield.Update(aDeltaTime);
 end;
 
-procedure TScreenshake.OnRenderFrame;
+procedure TGUI.OnRenderFrame;
 begin
   inherited;
   FStarfield.Render;
+  GV.Primitive.FilledRectangle((GV.Window.Width/2)-50, (GV.Window.Height/2)-50, 100, 100, DARKGREEN);
 end;
 
-procedure TScreenshake.OnRenderHUD;
+procedure TGUI.OnRenderHUD;
 begin
   inherited;
-  HudText(Font, GREEN, haLeft, HudTextItem('S', 'Screenshake'), []);
 end;
+
+procedure TGUI.OnProcessIMGUI;
+begin
+  inherited;
+
+  if GV.GUI.WindowBegin('Window 1', 'Window 1', 50, 50, 270, 220, cGuiWindowFlags) then
+  begin
+    GV.GUI.LayoutRowStatic(30, 80, 2);
+    GV.GUI.Button('One');
+    GV.GUI.Button('Two');
+
+    GV.GUI.LayoutRowDynamic(30, 2);
+    if GV.GUI.Option('easy', Boolean(Difficulty = 0)) then
+      Difficulty := 0;
+
+    if GV.GUI.Option('hard', Boolean(Difficulty = 1)) then
+      Difficulty := 1;
+
+    GV.GUI.LayoutRowBegin(GUI_STATIC, 30, 2);
+    GV.GUI.LayoutRowPush(50);
+    GV.GUI.&Label('Volume:', GUI_TEXT_LEFT);
+    GV.GUI.LayoutRowPush(110);
+    if GV.GUI.Slider(0, 1, 0.01, MusicVolume) then
+      GV.Audio.SetMusicVolume(FMusic, MusicVolume);
+    GV.GUI.LayoutRowPush(120);
+    if GV.GUI.Checkbox('Dig this', chk1) then
+    begin
+      if chk1 then
+      begin
+        GV.Audio.PlaySound(AUDIO_DYNAMIC_CHANNEL, FSfx, 0.5, False);
+      end;
+    end;
+    GV.GUI.Checkbox('Change theme', chk2);
+    GV.GUI.LayoutRowEnd;
+  end;
+  GV.GUI.WindowEnd;
+
+  if chk2 then
+  begin
+    if GV.GUI.WindowBegin('Window 2', 'Window 2', 350, 150, 320, 220, cGuiWindowFlags) then
+      begin
+       GV.GUI.LayoutRowStatic(25, 190, 1);
+       Theme := GV.GUI.Combobox(cGuiThemes, Theme, 25, 200, 200, ThemeChanged);
+      end
+    else
+      begin
+       chk2 := False;
+      end;
+    GV.GUI.WindowEnd;
+
+    if ThemeChanged then
+      GV.GUI.SetStyle(Theme);
+  end;
+end;
+
 
 end.

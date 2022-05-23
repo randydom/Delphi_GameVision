@@ -106,7 +106,7 @@ uses
 procedure TGVStarfield.TransformDrawPoint(aX, aY, aZ: Single; aVPX, aVPY, aVPW, aVPH: Integer);
 var
   LX, LY: Single;
-  LSW, LSH: Single;
+  LSize: Single;
   LOOZ: Single;
   LCV: byte;
   LColor: TGVColor;
@@ -114,14 +114,10 @@ var
   function IsVisible(vx, vy, vw, vh: Single): Boolean;
   begin
     Result := False;
-    if ((vx - vw) < 0) then
-      Exit;
-    if (vx > (aVPW - 1)) then
-      Exit;
-    if ((vy - vh) < 0) then
-      Exit;
-    if (vy > (aVPH - 1)) then
-      Exit;
+    if ((vx - vw) < 0) then Exit;
+    if (vx > (aVPW - 1)) then Exit;
+    if ((vy - vh) < 0) then Exit;
+    if (vy > (aVPH - 1)) then Exit;
     Result := True;
   end;
 
@@ -133,29 +129,22 @@ begin
   LOOZ := ((1.0 / aZ) * FViewScale);
   LX := (FCenter.X - aVPX) - (aX * LOOZ) * FViewScaleRatio;
   LY := (FCenter.Y - aVPY) + (aY * LOOZ) * FViewScaleRatio;
-  LSW := (GV.Window.Scale * LOOZ);
-  if LSW < GV.Window.Scale then
-    LSW := GV.Window.Scale;
-  LSH := (GV.Window.Scale * LOOZ);
-  if LSH < GV.Window.Scale then
-    LSH := GV.Window.Scale;
-
-  if not IsVisible(LX, LY, LSW, LSH) then Exit;
-  LCV := round(255.0 - (((1.0 / FMax.Z) / (1.0 / aZ)) * 255.0));
-
-  LColor.Make(LCV, LCV, LCV, LCV);
+  LSize := (1.0 * LOOZ);
+  if LSize < 2 then LSize := 2;
 
   LX := LX - FVirtualPos.X;
   LY := LY - FVirtualPos.Y;
+  if not IsVisible(LX, LY, LSize, LSize) then Exit;
 
-  GV.Primitive.FilledRectangle(LX, LY, LSW, LSH, LColor);
+  LCV := round(255.0 - (((1.0 / FMax.Z) / (1.0 / aZ)) * 255.0));
+  LColor.FromByte(LCV, LCV, LCV, LCV);
 
+  GV.Primitive.FilledRectangle(LX, LY, LSize, LSize, LColor);
 end;
 
 constructor TGVStarfield.Create;
 begin
   inherited;
-
   Init(250, -1000, -1000, 10, 1000, 1000, 1000, 120);
 end;
 
@@ -238,7 +227,6 @@ end;
 
 procedure TGVStarfield.SetZSpeed(aSpeed: Single);
 begin
-
   FSpeed.Z := aSpeed;
 end;
 

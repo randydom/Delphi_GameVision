@@ -76,6 +76,7 @@ uses
   GameVision.Screenshake,
   GameVision.Collision,
   GameVision.GUI,
+  GameVision.CmdConsole,
   GameVision.CustomGame,
   GameVision.Game;
 
@@ -106,6 +107,7 @@ type
     FScreenshake: TGVScreenshake;
     FCollision: TGVCollision;
     FGUI: TGVGUI;
+    FCmdConsole: TGVCmdConsole;
     FGame: TGVGame;
     function GetEvent: PALLEGRO_EVENT;
     procedure StartupAllegro;
@@ -132,6 +134,7 @@ type
     property Screenshake: TGVScreenshake read FScreenshake;
     property Collision: TGVCollision read FCollision;
     property GUI: TGVGUI read FGUI;
+    property CmdConsole: TGVCmdConsole read FCmdConsole;
     property Game: TGVGame read FGame write FGame;
     constructor Create; override;
     destructor Destroy; override;
@@ -281,10 +284,12 @@ begin
   FScreenshake := TGVScreenshake.Create;
   FCollision := TGVCollision.Create;
   FGUI := TGVGUI.Create;
+  FCmdConsole := TGVCmdConsole.Create;
 end;
 
 destructor TGV.Destroy;
 begin
+  FreeAndNil(FCmdConsole);
   FreeAndNil(FGUI);
   FreeAndNil(FCollision);
   FreeAndNil(FScreenshake);
@@ -350,13 +355,15 @@ begin
   LGame.OnPreStartup;
   LGame.OnSetSettings(LSettings);
   LGame.Settings := LSettings;
+  LGame.OpenArchive;
   LGame.OnLoadConfig;
-  LGame.OnApplySettings;
-  LGame.OnStartup;
-  LGame.OnRun;
-  LGame.OnShutdown;
-  LGame.OnUnApplySettings;
+  if not LGame.OnStartupDialog then
+    LGame.OnRun
+  else
+    while LGame.ProcessStartupDialog do
+      LGame.OnRun;
   LGame.OnSaveConfig;
+  LGame.CloseArchive;
   LGame.OnPostStartup;
   FreeAndNil(LGame);
 end;

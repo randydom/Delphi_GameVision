@@ -52,16 +52,19 @@ POSSIBILITY OF SUCH DAMAGE.
 
 program HelloWorld;
 
+{$I GameVision.Defines.inc}
+
 {$APPTYPE CONSOLE}
 
 {$R *.res}
 
 uses
   System.SysUtils,
-  GameVision.Game;
+  GameVision.Game,
+  uHelloWorld in 'uHelloWorld.pas';
 
 begin
   // Your game execution starts with a call to GVRunGame. You simply pass in
   // your TGVCustomGame or TGVGame derrived class to start the ball rolling.
-  GVRunGame(TGVGame);
+  GVRunGame(TExampleTemplate);
 end.

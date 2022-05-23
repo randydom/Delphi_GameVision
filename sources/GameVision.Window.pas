@@ -97,6 +97,7 @@ type
     FHeight: Integer;
     FScale: Single;
     FHWnd: HWND;
+    FDpi: Integer;
     FRenderTarget: TGVRenderTarget;
     procedure GetWindowCenterScaledToDPI(aWidth: Integer; aHeight: Integer; var aX: Integer; var aY: Integer);
     procedure ScaleToDPI;
@@ -105,6 +106,7 @@ type
     property Height: Integer read FHeight;
     property HWnd: HWND read FHWnd;
     property Scale: Single read FScale;
+    property Dpi: Integer read FDpi;
     property Handle: PALLEGRO_DISPLAY read FHandle;
     property Transform: ALLEGRO_TRANSFORM read FTransform;
     constructor Create; override;
@@ -137,6 +139,7 @@ uses
   System.IOUtils,
   GameVision.Core;
 
+{ TGVWindow }
 procedure TGVWindow.GetWindowCenterScaledToDPI(aWidth: Integer; aHeight: Integer; var aX: Integer; var aY: Integer);
 var
   LDpi: Integer;
@@ -216,16 +219,14 @@ begin
   al_set_new_display_option(ALLEGRO_SAMPLE_BUFFERS, 1, ALLEGRO_SUGGEST);
   al_set_new_display_option(ALLEGRO_SAMPLES, 8, ALLEGRO_SUGGEST);
   al_set_new_window_title(LMarshaller.AsUtf8(aTitle).ToPointer);
-  //GetWindowCenterScaledToDPI(aWidth, aHeight, LX, LY);
-  //al_set_new_window_position(LX, LY);
   FHandle := al_create_display(aWidth, aHeight);
   if FHandle = nil then Exit;
   FHWnd := al_get_win_window_handle(FHandle);
   SetWindowLong(FHwnd, GWL_STYLE, GetWindowLong(FHWnd, GWL_STYLE) and (not WS_MAXIMIZEBOX));
-  //GV.Util.LoadDefaultIcon(al_get_win_window_handle(FHandle));
   FWidth := aWidth;
   FHeight := aHeight;
   FScale := 1;
+  FDpi := GetDpiForWindow(al_get_win_window_handle(FHandle));
   FRenderTarget := nil;
   al_register_event_source(GV.Queue, al_get_display_event_source(FHandle));
   ScaleToDPI;
@@ -302,7 +303,6 @@ end;
 
 procedure TGVWindow.GetViewportSize(var aSize: TGVRectangle);
 begin
-  //aSize := FRenderTarget.Size;
   if FRenderTarget = nil then
     aSize.Assign(0, 0, FWidth, FHeight)
   else

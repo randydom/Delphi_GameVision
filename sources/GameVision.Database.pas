@@ -75,35 +75,47 @@ const
   GV_DEFAULT_MYSQL_PORT = 3306;
 
 type
+
   { TGVDatabase }
   TGVDatabase = class(TGVObject)
   protected
     FMySQLDriver: TFDPhysMySQLDriverLink;
     FSQLiteDriver: TFDPhysSQLiteDriverLink;
-    FConnection: TFDConnection;
-    FDataSet: TDataSet;
+    FConn: TFDConnection;
+    FQuery: TFDQuery;
     FLastError: string;
+    procedure Shutdown;
   public
     constructor Create; override;
     destructor Destroy; override;
     procedure SetupMySQL(const aServer: string; aPort: Integer; const aDatabase: string; const aUserName: string; const aPassword: string);
     procedure SetupSQLite(const aDatabase: string; aPassword: string);
+    procedure ClearSQLText;
+    procedure AddSQLText(const aText: string; const aArgs: array of const);
+    function  GetSQLText: string;
+    procedure SetSQLText(const aText: string);
     procedure Open;
     procedure Close;
-    function Connected: Boolean;
-    function ExecSQL(const aSQL: string; const aParams: array of const): LongInt;
-    function ExecSQLScalar(const aSQL: string; const aParams: array of const): string;
-    function Query(const aSQL: string; const aParams: array of const): LongInt;
-    function QueryFieldCount: Integer;
-    function QueryRecordCount: Integer;
-    function QueryBOF: Boolean;
-    function QueryEOF: Boolean;
-    procedure QueryNext;
-    procedure QueryPrev;
-    procedure QueryLast;
-    procedure QueryFirst;
-    function QueryField(const aName: string): string;
-    function LastError: string;
+    function  Connected: Boolean;
+    procedure Execute;
+    procedure ExecuteSQL(const aText: string);
+    function  GetLastError: string;
+    function  GetMacro(const aName: string): string;
+    procedure SetMacro(const aName: string; const aValue: string);
+    function  GetParam(const aName: string): string;
+    procedure SetParam(const aName: string; const aValue: string);
+    function  GetField(const aName: string): string;
+    procedure SetField(const aName: string; const aValue: string);
+    function  Bof: Boolean;
+    function  Eof: Boolean;
+    procedure First;
+    procedure Last;
+    procedure Prior;
+    procedure Next;
+    function FieldCount: Integer;
+    function RecordCount: Integer;
+    function RecordNo: Integer;
+    procedure Delete;
   end;
 
 implementation
@@ -114,190 +126,249 @@ uses
   GameVision.Deps;
 
 { TGVDatabase }
+procedure TGVDatabase.Shutdown;
+begin
+  if FQuery = nil then Exit;
+  FreeAndNil(FQuery);
+  FreeAndNil(FConn);
+  if FMySQLDriver <> nil then FreeAndNil(FMySQLDriver);
+  if FSQLiteDriver <> nil then FreeAndNil(FSQLiteDriver);
+end;
+
 constructor TGVDatabase.Create;
 begin
   inherited;
-  FMySQLDriver := TFDPhysMySQLDriverLink.Create(nil);
-  FMySQLDriver.VendorLib := TGVDeps.GetMySQLPath;
-  FSQLiteDriver := TFDPhysSQLiteDriverLink.Create(nil);
-  FConnection := TFDConnection.Create(nil);
-  FDataSet := nil;
+  FMySQLDriver := nil;
+  FSQLiteDriver := nil;
+  FConn := nil;
+  FQuery := nil;
 end;
 
 destructor TGVDatabase.Destroy;
 begin
-  Close;
-  FreeAndNil(FConnection);
-  FreeAndNil(FSQLiteDriver);
-  FreeAndNil(FMySQLDriver);
+  Shutdown;
   inherited;
 end;
 
 procedure TGVDatabase.SetupMySQL(const aServer: string; aPort: Integer; const aDatabase: string; const aUserName: string; const aPassword: string);
 begin
-  Close;
-  FConnection.Params.Clear;
-  FConnection.Params.Add('DriverID=MySQL');
-  FConnection.Params.Add(Format('Server=%s', [aServer]));
-  FConnection.Params.Add(Format('Port=%d', [aPort]));
-  FConnection.Params.Add(Format('Database=%s', [aDatabase]));
-  FConnection.Params.Add(Format('User_Name=%s', [aUserName]));
-  FConnection.Params.Add(Format('Password=%s', [aPassword]));
-  FConnection.Params.Add('UseSSL=True');
-  FConnection.Params.Add('CharacterSet=utf8');
+  if aServer.IsEmpty then Exit;
+  if aDatabase.IsEmpty then Exit;
+  if aUserName.IsEmpty then Exit;
+
+  Shutdown;
+
+  FMySQLDriver := TFDPhysMySQLDriverLink.Create(nil);
+  FMySQLDriver.VendorLib := TGVDeps.GetMySQLPath;
+  FConn := TFDConnection.Create(nil);
+  FQuery := TFDQuery.Create(nil);
+  FQuery.Connection := FConn;
+
+  FConn.Params.Clear;
+  FConn.Params.Add('DriverID=MySQL');
+  FConn.Params.Add(Format('Server=%s', [aServer]));
+  FConn.Params.Add(Format('Port=%d', [aPort]));
+  FConn.Params.Add(Format('Database=%s', [aDatabase]));
+  FConn.Params.Add(Format('User_Name=%s', [aUserName]));
+  FConn.Params.Add(Format('Password=%s', [aPassword]));
+  FConn.Params.Add('UseSSL=True');
+  FConn.Params.Add('CharacterSet=utf8');
   FLastError := '';
 end;
 
-procedure TGVDatabase.SetupSQLite(const aDatabase: string; aPassword: string);
+ procedure TGVDatabase.SetupSQLite(const aDatabase: string; aPassword: string);
 begin
-  Close;
-  FConnection.Params.Clear;
-  FConnection.Params.Add('DriverID=SQLite');
-  FConnection.Params.Add('Synchronous=Full');
-  FConnection.Params.Add('OpenMode=CreateUTF16');
-  FConnection.Params.Add(Format('Database=%s', [aDatabase]));
-  FConnection.Params.Add(Format('Password=aes-256:%s', [aPassword]));
+  if aDatabase.IsEmpty then Exit;
+
+  Shutdown;
+
+  FSQLiteDriver := TFDPhysSQLiteDriverLink.Create(nil);
+  FConn := TFDConnection.Create(nil);
+  FQuery := TFDQuery.Create(nil);
+  FQuery.Connection := FConn;
+
+  FConn.Params.Clear;
+  FConn.Params.Add('DriverID=SQLite');
+  FConn.Params.Add('Synchronous=Full');
+  FConn.Params.Add('OpenMode=CreateUTF16');
+  FConn.Params.Add(Format('Database=%s', [aDatabase]));
+  FConn.Params.Add(Format('Password=aes-256:%s', [aPassword]));
   FLastError := '';
+
+end;
+
+procedure TGVDatabase.ClearSQLText;
+begin
+  FQuery.SQL.Clear;
+end;
+
+procedure TGVDatabase.AddSQLText(const aText: string; const aArgs: array of const);
+begin
+  FQuery.SQL.Add(Format(aText, aArgs));
+end;
+
+function  TGVDatabase.GetSQLText: string;
+begin
+  Result := '';
+  if FQuery = nil then Exit;
+  Result := FQuery.SQL.Text;
+end;
+
+procedure TGVDatabase.SetSQLText(const aText: string);
+begin
+  if FQuery = nil then Exit;
+  FQuery.SQL.Text := aText;
 end;
 
 procedure TGVDatabase.Open;
 begin
-  if FConnection.Connected then Exit;
-  try
-    FConnection.Open;
-  except
-    on E: EFDDBEngineException do
-      FLastError := E.Message;
-  end;
+  if FQuery = nil then Exit;
+  if FQuery.SQL.Text.IsEmpty then Exit;
+  FQuery.Open;
+  FQuery.Open
 end;
 
 procedure TGVDatabase.Close;
 begin
-  if not FConnection.Connected then Exit;
-  if FDataSet <> nil then FreeAndNil(FDataSet);
+  if FQuery = nil then Exit;
+  FQuery.Close;
+end;
+
+function  TGVDatabase.Connected: Boolean;
+begin
+  Result := False;
+  if FConn = nil then Exit;
+  Result := FConn.Connected
+end;
+
+procedure TGVDatabase.Execute;
+begin
+  if FQuery = nil then Exit;
   try
-    FConnection.Close;
+    FQuery.Execute;
   except
-    on E: EFDDBEngineException do
+    on E: Exception do
+    begin
       FLastError := E.Message;
+    end;
   end;
 end;
 
-function TGVDatabase.Connected: Boolean;
+procedure TGVDatabase.ExecuteSQL(const aText: string);
 begin
-  Result := FConnection.Connected;
+  SetSQLText(aText);
+  Execute;
 end;
 
-function TGVDatabase.ExecSQL(const aSQL: string; const aParams: array of const): LongInt;
-begin
-  Result := 0;
-  if not FConnection.Connected then Exit;
-  try
-    Result := FConnection.ExecSQL(Format(aSQL, aParams));
-  except
-    on E: EFDDBEngineException do
-      FLastError := E.Message;
-  end;
-end;
-
-function TGVDatabase.ExecSQLScalar(const aSQL: string; const aParams: array of const): string;
-begin
-  Result := '';
-  if not FConnection.Connected then Exit;
-  try
-    Result := VarToStr(FConnection.ExecSQLScalar(Format(aSQL, aParams)))
-  except
-    on E: EFDDBEngineException do
-      FLastError := E.Message;
-  end;
-end;
-
-function TGVDatabase.Query(const aSQL: string; const aParams: array of const): LongInt;
-begin
-  Result := 0;
-  if not FConnection.Connected then Exit;
-  if FDataSet <> nil then FreeAndNil(FDataSet);
-  try
-    Result := FConnection.ExecSQL(Format(aSQL, aParams), FDataSet);
-  except
-    on E: EFDDBEngineException do
-      FLastError := E.Message;
-  end;
-end;
-
-function TGVDatabase.QueryFieldCount: Integer;
-begin
-  Result := 0;
-  if FDataSet = nil then Exit;
-  if not FConnection.Connected then Exit;
-  Result := FDataSet.FieldCount;
-end;
-
-function TGVDatabase.QueryRecordCount: Integer;
-begin
-  Result := 0;
-  if FDataSet = nil then Exit;
-  if not FConnection.Connected then Exit;
-  Result := FDataSet.RecordCount;
-end;
-
-function TGVDatabase.QueryBOF: Boolean;
-begin
-  Result := True;
-  if FDataSet = nil then Exit;
-  if not FConnection.Connected then Exit;
-  Result := FDataSet.Bof;
-end;
-
-function TGVDatabase.QueryEOF: Boolean;
-begin
-  Result := True;
-  if FDataSet = nil then Exit;
-  if not FConnection.Connected then Exit;
-  Result := FDataSet.Eof;
-end;
-
-procedure TGVDatabase.QueryNext;
-begin
-  if FDataSet = nil then Exit;
-  if not FConnection.Connected then Exit;
-  FDataSet.Next;
-end;
-
-procedure TGVDatabase.QueryPrev;
-begin
-  if FDataSet = nil then Exit;
-  if not FConnection.Connected then Exit;
-  FDataSet.Prior;
-end;
-
-procedure TGVDatabase.QueryLast;
-begin
-  if FDataSet = nil then Exit;
-  if not FConnection.Connected then Exit;
-  FDataSet.Last;
-end;
-
-procedure TGVDatabase.QueryFirst;
-begin
-  if FDataSet = nil then Exit;
-  if not FConnection.Connected then Exit;
-  FDataSet.First;
-end;
-
-function TGVDatabase.QueryField(const aName: string): string;
-begin
-  Result := '';
-  if FDataSet = nil then Exit;
-  if not FConnection.Connected then Exit;
-  if aName.IsEmpty then Exit;
-  Result := FDataSet.FieldByName(aName).AsString;
-end;
-
-function TGVDatabase.LastError: string;
+function  TGVDatabase.GetLastError: string;
 begin
   Result := FLastError;
-  FLastError := '';
 end;
+
+function  TGVDatabase.GetMacro(const aName: string): string;
+begin
+  Result := '';
+  if FQuery = nil then Exit;
+  Result := FQuery.MacroByName(aName).Value;
+end;
+
+procedure TGVDatabase.SetMacro(const aName: string; const aValue: string);
+begin
+  if FQuery = nil then Exit;
+  FQuery.MacroByName(aName).AsRaw := aValue;
+end;
+
+function  TGVDatabase.GetParam(const aName: string): string;
+begin
+  Result := '';
+  if FQuery = nil then Exit;
+  Result := FQuery.ParamByName(aName).AsString;
+end;
+
+procedure TGVDatabase.SetParam(const aName: string; const aValue: string);
+begin
+  if FQuery = nil then Exit;
+  FQuery.ParamByName(aName).AsString := aValue;
+end;
+
+function  TGVDatabase.GetField(const aName: string): string;
+begin
+  Result := '';
+  if FQuery = nil then Exit;
+  Result := FQuery.FieldByName(aName).AsString;
+end;
+
+procedure TGVDatabase.SetField(const aName: string; const aValue: string);
+begin
+  if FQuery = nil then Exit;
+  FQuery.FieldByName(aName).AsString := aValue;
+end;
+
+function  TGVDatabase.Bof: Boolean;
+begin
+  Result := False;
+  if FQuery = nil then Exit;
+  Result := FQuery.Bof;
+end;
+
+function  TGVDatabase.Eof: Boolean;
+begin
+  Result := False;
+  if FQuery = nil then Exit;
+  Result := FQuery.Eof;
+end;
+
+procedure TGVDatabase.First;
+begin
+  if FQuery = nil then Exit;
+  FQuery.First;
+end;
+
+procedure TGVDatabase.Last;
+begin
+  if FQuery = nil then Exit;
+  FQuery.Last;
+end;
+
+procedure TGVDatabase.Prior;
+begin
+  if FQuery = nil then Exit;
+  FQuery.Prior;
+end;
+
+procedure TGVDatabase.Next;
+begin
+  if FQuery = nil then Exit;
+  FQuery.Next;
+end;
+
+function TGVDatabase.RecordCount: Integer;
+begin
+  Result := 0;
+  if FQuery = nil then Exit;
+  Result := FQuery.RecordCount;
+end;
+
+function TGVDatabase.RecordNo: Integer;
+begin
+  Result := 0;
+  if FQuery = nil then Exit;
+  Result := FQuery.RecNo;
+end;
+
+function TGVDatabase.FieldCount: Integer;
+begin
+  Result := 0;
+  if FQuery = nil then Exit;
+  Result := FQuery.FieldCount;
+end;
+
+procedure TGVDatabase.Delete;
+begin
+  if FQuery = nil then Exit;
+  FQuery.Delete;
+  if FQuery.UpdatesPending then FQuery.ApplyUpdates;
+end;
+
 
 end.

@@ -68,7 +68,9 @@ uses
   GameVision.ActorScene,
   GameVision.Sprite,
   GameVision.Color,
-  GameVision.Common;
+  GameVision.Common,
+  GameVision.StartupDialog,
+  GameVision.Highscores;
 
 type
   { TGVGameSettings }
@@ -135,6 +137,7 @@ type
     FInputMap: TGVInputMap;
     FSprite: TGVSprite;
     FScene: TGVActorScene;
+    FStartupDialog: TGVStartupDialog;
     procedure UpdateTiming;
   public
     property Terminated: Boolean read FTerminated write FTerminated;
@@ -148,10 +151,16 @@ type
     property MousePressure: Single read FMousePressure;
     property Sprite: TGVSprite read FSprite;
     property Scene: TGVActorScene read FScene;
+    property StartupDialog: TGVStartupDialog read FStartupDialog;
     constructor Create; override;
     destructor Destroy; override;
+    function  ProcessStartupDialog: Boolean; virtual;
+    procedure OnStartupDialogMore; virtual;
+    function  OnStartupDialog: Boolean; virtual;
     procedure OnPreStartup; virtual;
     procedure OnPostStartup; virtual;
+    procedure OpenArchive; virtual;
+    procedure CloseArchive; virtual;
     procedure OnLoadConfig; virtual;
     procedure OnSaveConfig; virtual;
     procedure OnSetSettings(var aSettings: TGVGameSettings); virtual;
@@ -178,6 +187,7 @@ type
     procedure OnBeforeRenderScene(aSceneNum: Integer); virtual;
     procedure OnAfterRenderScene(aSceneNum: Integer); virtual;
     procedure OnProcessIMGUI; virtual;
+    procedure OnHighscoreAction(aHighscores: TGVHighscores; aAction: TGVHighscoreAction); virtual;
     function  GetTime: Double;
     procedure ResetTiming(aSpeed: Single=0; aFixedSpeed: Single=0);
     procedure SetUpdateSpeed(aSpeed: Single);
@@ -196,6 +206,7 @@ type
     procedure HudTextItemPadWidth(aWidth: Integer);
     procedure HudText(aFont: TGVFont; aColor: TGVColor; aAlign: TGVHAlign; const aMsg: string; const aArgs: array of const);
     function  HudTextItem(const aKey: string; const aValue: string; const aSeperator: string='-'): string;
+
   end;
 
   { TGVGameClass }
@@ -235,15 +246,21 @@ begin
   FTimer.Accumulator := FTimer.Accumulator + FTimer.Passed;
   while (FTimer.Accumulator >= FTimer.DeltaTime) do
   begin
-    // process screen shakes
-    GV.Screenshake.Process(FTimer.UpdateSpeed, FTimer.DeltaTime);
+    // update only if command console is not active
+    if not GV.CmdConsole.GetActive then
+    begin
+      // process screen shakes
+      GV.Screenshake.Process(FTimer.UpdateSpeed, FTimer.DeltaTime);
 
-    // call herited update frame
-    OnUpdateFrame(FTimer.DeltaTime);
+      // call herited update frame
+      OnUpdateFrame(FTimer.DeltaTime);
 
-    // call herited fixed update frame
-    if FrameSpeed(FTimer.FixedUpdateTimer, FTimer.FixedUpdateSpeed) then
-      OnFixedUpdateFrame;
+      // call herited fixed update frame
+      if FrameSpeed(FTimer.FixedUpdateTimer, FTimer.FixedUpdateSpeed) then OnFixedUpdateFrame;
+    end;
+
+    // update command console
+    GV.CmdConsole.Update(FTimer.DeltaTime);
 
     // update accumulator
     FTimer.Accumulator := FTimer.Accumulator - FTimer.DeltaTime;
@@ -260,16 +277,62 @@ begin
   // inputmap
   FInputMap := TGVInputMap.Create;
 
+  // startup dialog
+  FStartupDialog := TGVStartupDialog.Create;
+
   ResetTiming(60.0, 1.0);
   GV.Game := Self;
 end;
 
 destructor TGVGame.Destroy;
 begin
+  FreeAndNil(FStartupDialog);
   FreeAndNil(FInputMap);
   FreeAndNil(FConfigFile);
   GV.Game := nil;
   inherited;
+end;
+
+function TGVGame.ProcessStartupDialog: Boolean;
+var
+  LState: TGVStartupDialogState;
+  LDone: Boolean;
+begin
+//  StartupDialog.SetCaption('GameVision - Camera1');
+//  StartupDialog.SetLogo(Archive, 'arc/startupdialog/banner.png');
+//  StartupDialog.SetReadme(Archive, 'arc/startupdialog/README.rtf');
+//  StartupDialog.SetLicense(Archive, 'arc/startupdialog/LICENSE.rtf');
+//  StartupDialog.SetReleaseInfo('Version '+GV_VERSION);
+  Result := True;
+  LDone := False;
+  repeat
+    LState := StartupDialog.Show;
+    case LState of
+      sdsMore:
+        begin
+          OnStartupDialogMore;
+        end;
+      sdsRun :
+        begin
+          LDone := True;
+          Result := True;
+        end;
+      sdsQuit:
+        begin
+          LDone := True;
+          Result := False;
+        end;
+    end;
+  until LDone;
+end;
+
+procedure TGVGame.OnStartupDialogMore;
+begin
+end;
+
+function  TGVGame.OnStartupDialog: Boolean;
+begin
+  Result := False;
 end;
 
 procedure TGVGame.OnPreStartup;
@@ -278,6 +341,18 @@ end;
 
 procedure TGVGame.OnPostStartup;
 begin
+end;
+
+procedure TGVGame.OpenArchive;
+begin
+  FArchive := TGVArchive.Create;
+  FArchive.Open(FSettings.ArchivePassword, FSettings.ArchiveFilename);
+end;
+
+procedure TGVGame.CloseArchive;
+begin
+  // archive
+  FreeAndNil(FArchive);
 end;
 
 procedure TGVGame.OnLoadConfig;
@@ -328,10 +403,6 @@ end;
 
 procedure TGVGame.OnApplySettings;
 begin
-  // archive
-  FArchive := TGVArchive.Create;
-  FArchive.Open(FSettings.ArchivePassword, FSettings.ArchiveFilename);
-
   // window settings
   GV.Window.Open(FSettings.WindowWidth, FSettings.WindowHeight, FSettings.WindowTitle);
 
@@ -405,6 +476,9 @@ begin
   // scene
   FScene := TGVActorScene.Create;
   FScene.Alloc(FSettings.SceneCount);
+
+  // audio
+  GV.Audio.Open;
 end;
 
 procedure TGVGame.OnUnApplySettings;
@@ -421,14 +495,13 @@ begin
   // window settings
   GV.Window.Close;
 
-  // archive
-  FreeAndNil(FArchive);
+  // audio
+  GV.Audio.Close;
 end;
 
 procedure TGVGame.OnStartup;
 begin
   inherited;
-  GV.Speech.Say('Hello World! Welcome to GameVision. Game development for Delphi, easy, fast, fun.', True);
 end;
 
 procedure TGVGame.OnShutdown;
@@ -471,15 +544,10 @@ begin
 end;
 
 procedure TGVGame.OnRenderHUD;
-var
-  LPos: TGVVector;
 begin
   HudResetPos;
   HudText(FFont, WHITE, haLeft, 'fps %d', [GetFrameRate]);
   HudText(FFont, GREEN, haLeft, HudTextItem('ESC', 'Quit'), []);
-
-  LPos.Assign(GV.Window.Width div 2, GV.Window.Height div 2, 0);
-  FFont.PrintText(LPos.X, LPos.Y, 0, ORANGE, haCenter, 'Hello world, welcome to GameVision!', []);
 end;
 
 procedure TGVGame.OnShowFrame;
@@ -520,6 +588,10 @@ begin
 end;
 
 procedure TGVGame.OnProcessIMGUI;
+begin
+end;
+
+procedure TGVGame.OnHighscoreAction(aHighscores: TGVHighscores; aAction: TGVHighscoreAction);
 begin
 end;
 
@@ -649,10 +721,45 @@ begin
   Result := Format('%s %s %s', [aKey.PadRight(FHud.TextItemPadWidth), aSeperator, aValue]);
 end;
 
+(*
+  // run game
+  procedure RunGame(aGame: TGVGame);
+
+    procedure GameLoop;
+    begin
+      aGame.OnApplySettings;
+      aGame.OnStartup;
+      aGame.OnRun;
+      aGame.OnShutdown;
+      aGame.OnUnApplySettings;
+    end;
+
+  begin
+    aGame.OnProcessCmdLine;
+    aGame.OnPreStartup;
+    aGame.OnSetSettings(aGame.FSettings);
+    aGame.OpenArchive;
+    aGame.OnLoadConfig;
+    if not aGame.OnStartupDialog then
+      GameLoop
+    else
+    while aGame.ProcessStartupDialog do
+      GameLoop;
+    aGame.OnSaveConfig;
+    aGAme.CloseArchive;
+    aGame.OnPostStartup;
+  end;
+
+*)
+
+
 procedure TGVGame.OnRun;
 var
   LCurrentTransform: ALLEGRO_TRANSFORM;
 begin
+  OnApplySettings;
+  OnStartup;
+
   if not GV.Window.IsOpen then Exit;
 
   FTerminated := False;
@@ -661,6 +768,7 @@ begin
 
   GV.Audio.Open;
   GV.GUI.Open;
+  GV.CmdConsole.Open;
 
   while not FTerminated do
   begin
@@ -760,6 +868,7 @@ begin
         GV.GUI.Render;
         GV.GUI.Clear;
         OnRenderHUD;
+        GV.CmdConsole.Render;
         al_use_transform(@LCurrentTransform);
         GV.Screenshot.Process;
         OnShowFrame;
@@ -771,13 +880,15 @@ begin
       end;
   end;
 
+  OnShutdown;
+  OnUnApplySettings;
+
   GV.Speech.Clear;
+  GV.CmdConsole.Close;
   GV.GUI.Close;
   GV.Audio.Close;
   GV.Video.Unload;
-
 end;
-
 
 { GVRunGame }
 procedure GVRunGame(aGame: TGVCustomGameClass; aPause: Boolean=False);
@@ -801,13 +912,15 @@ var
     aGame.OnProcessCmdLine;
     aGame.OnPreStartup;
     aGame.OnSetSettings(aGame.FSettings);
+    aGame.OpenArchive;
     aGame.OnLoadConfig;
-    aGame.OnApplySettings;
-    aGame.OnStartup;
-    aGame.OnRun;
-    aGame.OnShutdown;
-    aGame.OnUnApplySettings;
+    if not aGame.OnStartupDialog then
+      aGame.OnRun
+    else
+    while aGame.ProcessStartupDialog do
+      aGame.OnRun;
     aGame.OnSaveConfig;
+    aGAme.CloseArchive;
     aGame.OnPostStartup;
   end;
 

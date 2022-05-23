@@ -56,8 +56,8 @@ interface
 
 {$I GameVision.Defines.inc}
 
-{$MINENUMSIZE 4}
-{$WARN SYMBOL_PLATFORM OFF}
+//{$MINENUMSIZE 4}
+//{$WARN SYMBOL_PLATFORM OFF}
 
 const
   NUKLEAR_DLL = 'Nuklear.dll';

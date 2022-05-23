@@ -1,6 +1,6 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
-        <ProjectGuid>{4970D40E-A405-487A-8A99-2D3A71FBD0B4}</ProjectGuid>
+        <ProjectGuid>{456575EB-4985-4495-8E4A-077B9BD44DB0}</ProjectGuid>
         <ProjectVersion>19.4</ProjectVersion>
         <FrameworkType>VCL</FrameworkType>
         <Base>True</Base>
@@ -119,6 +119,7 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
+        <DCCReference Include="uHelloWorld.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

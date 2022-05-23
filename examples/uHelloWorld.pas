@@ -70,12 +70,16 @@ POSSIBILITY OF SUCH DAMAGE.
     OnRenderHUD   - run game hud rendering code
 *)
 
-unit uExampleTemplate;
+unit uHelloWorld;
 
 interface
 
 uses
   System.SysUtils,
+  GameVision.Common,
+  GameVision.Color,
+  GameVision.Math,
+  GameVision.Core,
   GameVision.Game,
   uCommon;
 
@@ -145,12 +149,13 @@ end;
 procedure TExampleTemplate.OnSetSettings(var aSettings: TGVGameSettings);
 begin
   inherited;
-  aSettings.WindowTitle := 'TExampleTemplate';
+  aSettings.WindowTitle := 'GameVision Toolkit';
 end;
 
 procedure TExampleTemplate.OnStartup;
 begin
   inherited;
+  GV.Speech.Say('Hello World! Welcome to GameVision. Game development for Delphi, easy, fast, fun.', True);
 end;
 
 procedure TExampleTemplate.OnShutdown;
@@ -194,8 +199,12 @@ begin
 end;
 
 procedure TExampleTemplate.OnRenderHUD;
+var
+  LPos: TGVVector;
 begin
   inherited;
+  LPos.Assign(GV.Window.Width div 2, GV.Window.Height div 2, 0);
+  FFont.PrintText(LPos.X, LPos.Y, 0, ORANGE, haCenter, 'Hello world, welcome to GameVision!', []);
 end;
 
 procedure TExampleTemplate.OnShowFrame;

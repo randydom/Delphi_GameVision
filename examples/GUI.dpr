@@ -50,62 +50,21 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 ============================================================================= }
 
-unit GameVision.Common;
+program GUI;
 
 {$I GameVision.Defines.inc}
 
-interface
+{$APPTYPE CONSOLE}
 
-const
-  // GameVision Constants
-  GV_VERSION_MAJOR = '0';
-  GV_VERSION_MINOR = '1';
-  GV_VERSION_PATCH = '0';
-  GV_VERSION       = GV_VERSION_MAJOR + '.' + GV_VERSION_MINOR + '.' + GV_VERSION_PATCH;
+{$R *.res}
 
-  // File Extentions Constatns
-  GV_FILEEXT_LOG = 'log';
-  GV_FILEEXT_INI = 'ini';
-  GV_FILEEXT_PNG = 'png';
+uses
+  System.SysUtils,
+  GameVision.Game,
+  uGUI in 'uGUI.pas';
 
-  // Common Character
-  GV_CR = #13;  // carrage return
-  GV_LF = #10;  // line feed
-
-  // Display Constants
-  GV_DISPLAY_DEFAULT_DPI = 96;
-
-  // ID Constants
-  GV_ID_NIL = -1;
-
-  // Degree/Radian conversion
-  GV_RAD2DEG = 180.0 / PI;
-  GV_DEG2RAD = PI / 180.0;
-
-  // TreeMenu
-  GV_TREEMENU_NONE = -1;
-  GV_TREEMENU_QUIT = -2;
-
-  // Misc
-  GV_EPSILON = 0.00001;
-
-type
-
-  { TGVPrintEvent }
-  TGVPrintEvent = procedure(const aMsg: string; const aArgs: array of const) of object;
-
-  { TGVSeekOperation }
-  TGVSeekOperation = (soStart, soCurrent, soEnd);
-
-  { TGVHAlign }
-  TGVHAlign = (haLeft, haCenter, haRight);
-
-  { TGVVAlign }
-  TGVVAlign = (vaTop, vaCenter, vaBottom);
-
-  { TStartupDialogState }
-  TGVStartupDialogState = (sdsMore = 0, sdsRun = 1, sdsQuit = 2);
-
-implementation
-
+begin
+  // Your game execution starts with a call to GVRunGame. You simply pass in
+  // your TGVCustomGame or TGVGame derrived class to start the ball rolling.
+  GVRunGame(TGUI);
 end.

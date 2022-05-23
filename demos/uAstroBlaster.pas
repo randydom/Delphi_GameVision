@@ -243,7 +243,7 @@ type
     FBkColor: TGVColor;
     FMusic: Integer;
   public
-      Sfx: array[0..7] of Integer;
+    Sfx: array[0..7] of Integer;
     Background : array[0..3] of TGVTexture;
     PlayerSprID: TSpriteID;
     EnemySprID: TSpriteID;
@@ -255,7 +255,7 @@ type
 
     constructor Create; override;
     destructor Destroy; override;
-    procedure OnPreStartup; override;
+    function OnStartupDialog: Boolean; override;
     procedure OnSetSettings(var aSettings: TGVGameSettings); override;
     procedure OnStartup; override;
     procedure OnShutdown; override;
@@ -836,9 +836,15 @@ begin
   inherited;
 end;
 
-procedure TAstroBlaster.OnPreStartup;
+function TAstroBlaster.OnStartupDialog: Boolean;
 begin
-  inherited;
+  StartupDialog.SetCaption('GameVision - AstroBlaster Demo');
+  StartupDialog.SetLogo(Archive, 'arc/startupdialog/banner.png');
+  StartupDialog.SetLogoClickUrl('https://gamevisiontoolkit.com');
+  StartupDialog.SetReadme(Archive, 'arc/startupdialog/README.rtf');
+  StartupDialog.SetLicense(Archive, 'arc/startupdialog/LICENSE.rtf');
+  StartupDialog.SetReleaseInfo('Version '+GV_VERSION);
+  Result := True;
 end;
 
 procedure TAstroBlaster.OnSetSettings(var aSettings: TGVGameSettings);
@@ -854,7 +860,7 @@ begin
   inherited;
 
 // init background
-  FBkColor.Make(255,255,255,128);
+  FBkColor.FromByte(255,255,255,128);
 
   Background[0] := TGVTexture.Create;
   Background[1] := TGVTexture.Create;

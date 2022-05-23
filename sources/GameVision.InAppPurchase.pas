@@ -50,97 +50,117 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 ============================================================================= }
 
-(*
-  This is a game template you can use in your projects as a starting point.
+unit GameVision.InAppPurchase;
 
-  1. Add GameVision.GameTemplate unit to your project
-  2. Save-as a new unit name
-  3. Place cursor on TGVGameTemplate and press Shft+Ctrl+E to rename
-  4. Update { TGVGameTemplate } throughout to your liking
-  5. Enjoy
-  --------------------------------------------------------------------------
-  In GameVision you have a these OnXXX callback methods that you can
-  override to add functionaliy to your game. The minimum methods that you
-  must override include:
-    OnSetSettings - set game settings
-    OnStartup     - run game startup code
-    OnShutdown    - run game shutdown code
-    OnUpdateFrame - run game update code
-    OnRenderFrame - run game rendering code
-    OnRenderHUD   - run game hud rendering code
-*)
-
-unit uScreenshake;
+{$I GameVision.Defines.inc}
 
 interface
 
 uses
   System.SysUtils,
-  GameVision.Common,
-  GameVision.Color,
-  GameVision.Input,
-  GameVision.Starfield,
-  GameVision.Core,
-  GameVision.Game,
-  uCommon;
+  GameVision.Base;
 
 type
-  { TExampleTemplate }
-  TScreenshake = class(TBaseExample)
+
+  { TGVInAppPurchase }
+  TGVInAppPurchase = class;
+
+  { TGVInAppPurchaseEvent }
+  TGVInAppPurchaseEvent = procedure(aIAP: TGVInAppPurchase) of object;
+
+  { TGVInAppPurchase }
+  TGVInAppPurchase = class(TGVObject)
   protected
-    FStarfield: TGVStarfield;
+    FError: string;
+    FStatus: string;
+    FDescription: string;
+    FId: string;
+    FAmount: string;
+    FCurrency: string;
+    FBusy: Boolean;
   public
-    procedure OnSetSettings(var aSettings: TGVGameSettings); override;
-    procedure OnStartup; override;
-    procedure OnShutdown; override;
-    procedure OnUpdateFrame(aDeltaTime: Double); override;
-    procedure OnRenderFrame; override;
-    procedure OnRenderHUD; override;
+    property Error: string read FError;
+    property Status: string read FStatus;
+    property Description: string read FDescription;
+    property Id: string read FId;
+    property Amount: string read FAmount;
+    property Currency: string read FCurrency;
+    constructor Create; override;
+    destructor Destroy; override;
+    procedure Buy(const aKey: string; const aDescription: string;
+      aAmount: Single; const aCurrency: string; const aCardNum: string;
+      aExpMonth: Integer; aExpYear: Integer; aCvc: string;
+      aEvent: TGVInAppPurchaseEvent);
   end;
 
 implementation
 
-{ TExampleTemplate }
-procedure TScreenshake.OnSetSettings(var aSettings: TGVGameSettings);
+uses
+  System.Math,
+  GameVision.Core,
+  GameVision.Stripe;
+
+{ TGVInAppPurchase }
+constructor TGVInAppPurchase.Create;
 begin
   inherited;
-  aSettings.WindowTitle := 'GameVision - Screenshake';
-  aSettings.WindowClearColor := BLACK;
+  FError := '';
+  FStatus := '';
+  FDescription := '';
+  FId := '';
+  FAmount := '';
+  FCurrency := '';
 end;
 
-procedure TScreenshake.OnStartup;
+destructor TGVInAppPurchase.Destroy;
 begin
-  inherited;
-  FStarfield := TGVStarfield.Create;
-  //FStarfield.SetScale(GV.Window.Scale);
-end;
-
-procedure TScreenshake.OnShutdown;
-begin
-  FreeAndNil(FStarfield);
   inherited;
 end;
 
-procedure TScreenshake.OnUpdateFrame(aDeltaTime: Double);
+procedure TGVInAppPurchase.Buy(const aKey: string; const aDescription: string; aAmount: Single; const aCurrency: string; const aCardNum: string; aExpMonth: Integer; aExpYear: Integer; aCvc: string; aEvent: TGVInAppPurchaseEvent);
+var
+  LStripe: IGVStripe;
+  LToken: string;
+  LCharge: IGVStripeCharge;
+  LAmount: Integer;
 begin
-  inherited;
+  if FBusy then Exit;
 
-  if GV.Input.KeyPressed(KEY_S) then
-    GV.Screenshake.Start(60, 5);
+  if aKey.IsEmpty then Exit;
+  if aAmount < 0.50 then Exit;
+  if aCurrency.IsEmpty then Exit;
+  if aCardNum.IsEmpty then Exit;
+  if not InRange(aExpMonth, 1, 12) then Exit;
+  if aExpYear < CurrentYear then Exit;
+  if aCvc.IsEmpty then Exit;
 
-  FStarfield.Update(aDeltaTime);
-end;
+  GV.Async.Run(
+    'TGVInAppPurchase',
+    procedure
+    begin
+      FBusy := True;
+      FStatus := '';
+      FDescription := '';
+      FId := '';
+      FAmount := '';
+      FCurrency := '';
+      LAmount := Trunc(aAmount * 100);
+      LStripe := GVCreateStripe(aKey);
+      LToken := LStripe.CreateToken(aCardNum, aExpMonth, aExpYear, aCvc);
+      LCharge := LStripe.CreateCharge(LToken, aDescription, LAmount.ToString, nil, FError, aCurrency);
+    end,
+    procedure
+    begin
+      FStatus := LCharge.Status;
+      FDescription := LCharge.Desc;
+      FId := LCharge.ID;
+      FAmount := (LCharge.AmountPence / 100).ToString;
+      FCurrency := LCharge.Currency;
+      if Assigned(aEvent) then aEvent(Self);
+      FBusy := False;
+    end
+  );
 
-procedure TScreenshake.OnRenderFrame;
-begin
-  inherited;
-  FStarfield.Render;
-end;
-
-procedure TScreenshake.OnRenderHUD;
-begin
-  inherited;
-  HudText(Font, GREEN, haLeft, HudTextItem('S', 'Screenshake'), []);
 end;
 
 end.

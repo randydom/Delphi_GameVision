@@ -170,7 +170,7 @@ end;
 function nk_color_to_color(color: nk_color): TGVColor;
 begin
   //Result := Piro.Color.Make(color.r, color.g, color.b, color.a);
-  Result.Make(color.r, color.g, color.b, color.a);
+  Result.FromByte(color.r, color.g, color.b, color.a);
 end;
 
 procedure TGVGUI.HandleEvent(aEvent: ALLEGRO_EVENT);
@@ -319,6 +319,14 @@ var
   LVertices: array of Single;
   Points: array [0 .. 7] of Single;
   LVX,LVY,LVW,LVH: Integer;
+  function sv(aValue: Integer): Integer; overload; inline;
+  begin
+    Result := Round(aValue*GV.Window.Scale);
+  end;
+  function sv(aValue: Single): Single; overload; inline;
+  begin
+    Result := aValue*GV.Window.Scale;
+  end;
 begin
   al_get_clipping_rectangle(@LVX, @LVY, @LVW, @LVH);
   LCmd := nk__begin(@FCtx);
@@ -333,13 +341,7 @@ begin
       NK_COMMAND_SCISSOR_:
         begin
           var c: Pnk_command_scissor := Pnk_command_scissor(LCmd);
-          var cx, cy, cw, ch, scale: Single;
-          scale := GV.Window.Scale;
-          cx := (c.x * scale) + (GV.Window.Width * GV.Window.Scale) - 1;
-          cy := (c.y * scale) + (GV.Window.Height * GV.Window.Scale) - 1;
-          cw := c.w * scale;
-          ch := c.h * scale;
-          al_set_clipping_rectangle(round(cx), round(cy), round(cw), round(ch));
+          al_set_clipping_rectangle(sv(c.x), sv(c.y), sv(c.w), sv(c.h));
         end;
 
       NK_COMMAND_LINE_:

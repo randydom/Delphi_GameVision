@@ -61,9 +61,9 @@ type
   { TGVColor }
   TGVColor = record
     Red,Green,Blue,Alpha: Single;
-    function Make(aRed: Byte; aGreen: Byte; aBlue: Byte; aAlpha: Byte): TGVColor; overload;
-    function Make(aRed: Single; aGreen: Single; aBlue: Single; aAlpha: Single): TGVColor; overload;
-    function Make(const aName: string): TGVColor; overload;
+    function FromByte(aRed: Byte; aGreen: Byte; aBlue: Byte; aAlpha: Byte): TGVColor; overload;
+    function FromFloat(aRed: Single; aGreen: Single; aBlue: Single; aAlpha: Single): TGVColor; overload;
+    function FromName(const aName: string): TGVColor; overload;
     function Fade(aTo: TGVColor; aPos: Single): TGVColor;
     function Equal(aColor: TGVColor): Boolean;
   end;
@@ -238,7 +238,7 @@ uses
   GameVision.Allegro;
 
 { TGVColor }
-function TGVColor.Make(aRed: Byte; aGreen: Byte; aBlue: Byte; aAlpha: Byte): TGVColor;
+function TGVColor.FromByte(aRed: Byte; aGreen: Byte; aBlue: Byte; aAlpha: Byte): TGVColor;
 var
   LColor: ALLEGRO_COLOR;
 begin
@@ -250,7 +250,7 @@ begin
   Result := Self;
 end;
 
-function TGVColor.Make(aRed: Single; aGreen: Single; aBlue: Single; aAlpha: Single): TGVColor;
+function TGVColor.FromFloat(aRed: Single; aGreen: Single; aBlue: Single; aAlpha: Single): TGVColor;
 var
   LColor: ALLEGRO_COLOR;
 begin
@@ -262,7 +262,7 @@ begin
   Result := Self;
 end;
 
-function TGVColor.Make(const aName: string): TGVColor;
+function TGVColor.FromName(const aName: string): TGVColor;
 var
   LMarshaller: TMarshaller;
   LColor: ALLEGRO_COLOR absolute Result;
@@ -290,7 +290,7 @@ begin
   LColor.Blue := Blue + ((aTo.Blue - Blue) * aPos);
   LColor.Green := Green + ((aTo.Green - Green) * aPos);
   LColor.Red := Red + ((aTo.Red - Red) * aPos);
-  Result := Make(LColor.Red, LColor.Green, LColor.Blue, LColor.Alpha);
+  Result := FromFloat(LColor.Red, LColor.Green, LColor.Blue, LColor.Alpha);
 end;
 
 function TGVColor.Equal(aColor: TGVColor): Boolean;

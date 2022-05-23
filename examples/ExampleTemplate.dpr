@@ -61,8 +61,7 @@ program ExampleTemplate;
 uses
   System.SysUtils,
   GameVision.Game,
-  uExampleTemplate in 'uExampleTemplate.pas',
-  uCommon in 'uCommon.pas';
+  uExampleTemplate in 'uExampleTemplate.pas';
 
 begin
   // Your game execution starts with a call to GVRunGame. You simply pass in

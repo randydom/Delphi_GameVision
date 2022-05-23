@@ -62,6 +62,12 @@ uses
   WinApi.Windows;
 
 type
+  { TGVEaseType }
+  TGVEaseType = (etLinearTween, etInQuad, etOutQuad, etInOutQuad, etInCubic,
+    etOutCubic, etInOutCubic, etInQuart, etOutQuart, etInOutQuart, etInQuint,
+    etOutQuint, etInOutQuint, etInSine, etOutSine, etInOutSine, etInExpo,
+    etOutExpo, etInOutExpo, etInCircle, etOutCircle, etInOutCircle);
+
   { TGVUtil }
   TGVUtil = record
   private
@@ -92,15 +98,43 @@ type
     class function  IsSingleInstance(aMutexName: string; aKeepMutex: Boolean=True): Boolean; static;
     class function  GetEnvVarValue(const aVarName: string): string; static;
     class function  SetEnvVarValue(const aVarName, aVarValue: string): Integer; static;
+    class function  GetModuleVersionFullStr: string; overload; static;
+    class function  GetModuleVersionFullStr(const aFilename: string): string; overload; static;
+    class function  GetAppVersionStr: string; static;
+    class function  GetAppVersionFullStr: string; static;
+    class function  GetAppName: string; static;
+    class function  GetAppPath: string; static;
+    class function  GetCPUCount: Integer; static;
+    class procedure GetDiskFreeSpace(const aPath: string; var aFreeSpace: Int64; var aTotalSpace: Int64); static;
+    class function  GetOSVersion: string; static;
+    class procedure GetMemoryFree(var aAvailMem: UInt64; var aTotalMem: UInt64); static;
+    class function  GetVideoCardName: string; static;
+    class function  EncryptString(const aValue: string; const aPassword: string; aEncryp: Boolean): string; static;
+    class function  StringMacro(const aString: string; const aMacro: string; const aValue: string; const aPrefix: string='&'; const aPostfix: string=''): string; overload; static;
+    class function  StringMacro(const aString: string; const aMacro: string; const aValue: Int64; const aPrefix: string='&'; const aPostfix: string=''): string; overload; static;
+    class function  StringMacro(const aString: string; const aMacro: string; const aValue: UInt64; const aPrefix: string='&'; const aPostfix: string=''): string; overload; static;
+    class function  StringMacro(const aString: string; const aMacro: string; const aValue: Double; const aPrefix: string='&'; const aPostfix: string=''): string; overload; static;
+    class function  EaseValue(aCurrentTime: Double; aStartValue: Double; aChangeInValue: Double; aDuration: Double; aEaseType: TGVEaseType): Double; static;
+    class function  EasePosition(aStartPos: Double; aEndPos: Double; aCurrentPos: Double; aEaseType: TGVEaseType): Double; static;
+    class function URLEncode(const Url: string): string; static;
+    class function URLEncodeTilde(const Url: string): string; static;
+    class function HTTPEncode(const AStr: ansistring): AnsiString; static;
+    class function URLEncodeRFC3986(URL: string): string; static;
+    class function EncodeParams(Params: TStringList; splitter: string; quot: Boolean; encodeHttp: Boolean = false): string; static;
+
   end;
 
 implementation
 
 uses
   System.IOUtils,
+  System.Win.ComObj,
+  System.Variants,
+  System.Math,
   VCL.Graphics,
   WinApi.Messages,
-  WinApi.ShellAPI;
+  WinApi.ShellAPI,
+  WinApi.ActiveX;
 
 class function  TGVUtil.GetLastOSError: string;
 begin
@@ -518,5 +552,492 @@ begin
   else
     Result := GetLastError;
 end;
+
+class function TGVUtil.GetModuleVersionFullStr: string;
+begin
+  Result := GetModuleVersionFullStr(GetModuleName(HInstance));
+end;
+
+class function TGVUtil.GetModuleVersionFullStr(const aFilename: string): string;
+var
+  LExe: string;
+  LSize, LHandle: DWORD;
+  LBuffer: TBytes;
+  LFixedPtr: PVSFixedFileInfo;
+begin
+  Result := '';
+  if not TFile.Exists(aFilename) then Exit;
+  LExe := aFilename;
+  LSize := GetFileVersionInfoSize(PChar(LExe), LHandle);
+  if LSize = 0 then
+  begin
+    //RaiseLastOSError;
+    //no version info in file
+    Exit;
+  end;
+  SetLength(LBuffer, LSize);
+  if not GetFileVersionInfo(PChar(LExe), LHandle, LSize, LBuffer) then
+    RaiseLastOSError;
+  if not VerQueryValue(LBuffer, '\', Pointer(LFixedPtr), LSize) then
+    RaiseLastOSError;
+  if (LongRec(LFixedPtr.dwFileVersionLS).Hi = 0) and (LongRec(LFixedPtr.dwFileVersionLS).Lo = 0) then
+  begin
+    Result := Format('%d.%d',
+    [LongRec(LFixedPtr.dwFileVersionMS).Hi,   //major
+     LongRec(LFixedPtr.dwFileVersionMS).Lo]); //minor
+  end
+  else if (LongRec(LFixedPtr.dwFileVersionLS).Lo = 0) then
+  begin
+    Result := Format('%d.%d.%d',
+    [LongRec(LFixedPtr.dwFileVersionMS).Hi,   //major
+     LongRec(LFixedPtr.dwFileVersionMS).Lo,   //minor
+     LongRec(LFixedPtr.dwFileVersionLS).Hi]); //release
+  end
+  else
+  begin
+    Result := Format('%d.%d.%d.%d',
+    [LongRec(LFixedPtr.dwFileVersionMS).Hi,   //major
+     LongRec(LFixedPtr.dwFileVersionMS).Lo,   //minor
+     LongRec(LFixedPtr.dwFileVersionLS).Hi,   //release
+     LongRec(LFixedPtr.dwFileVersionLS).Lo]); //build
+  end;
+end;
+
+class function TGVUtil.GetAppVersionStr: string;
+var
+  LRec: LongRec;
+  LVer : Cardinal;
+begin
+  LVer := System.SysUtils.GetFileVersion(ParamStr(0));
+  if LVer <> Cardinal(-1) then
+  begin
+    LRec := LongRec(LVer);
+    Result := Format('%d.%d', [LRec.Hi, LRec.Lo]);
+  end
+  else Result := '';
+end;
+
+class function  TGVUtil.GetAppVersionFullStr: string;
+begin
+  GetModuleVersionFullStr(ParamStr(0));
+end;
+
+class function  TGVUtil.GetAppName: string;
+begin
+  Result := Format('%s %s',[TPath.GetFileNameWithoutExtension(ParamStr(0)),GetAppVersionFullStr]);
+end;
+
+class function  TGVUtil.GetAppPath: string;
+begin
+  Result := ExtractFilePath(ParamStr(0));
+end;
+
+class function  TGVUtil.GetCPUCount: Integer;
+begin
+  Result := CPUCount;
+end;
+
+class procedure TGVUtil.GetDiskFreeSpace(const aPath: string; var aFreeSpace: Int64; var aTotalSpace: Int64);
+begin
+  GetDiskFreeSpaceEx(PChar(aPath), aFreeSpace, aTotalSpace, nil);
+end;
+
+class function  TGVUtil.GetOSVersion: string;
+begin
+  Result := TOSVersion.ToString;
+end;
+
+class procedure TGVUtil.GetMemoryFree(var aAvailMem: UInt64; var aTotalMem: UInt64);
+var
+  LMemStatus: MemoryStatusEx;
+begin
+ FillChar (LMemStatus, SizeOf(MemoryStatusEx), #0);
+ LMemStatus.dwLength := SizeOf(MemoryStatusEx);
+ GlobalMemoryStatusEx (LMemStatus);
+ aAvailMem := LMemStatus.ullAvailPhys;
+ aTotalMem := LMemStatus.ullTotalPhys;
+end;
+
+class function  TGVUtil.GetVideoCardName: string;
+const
+  WbemUser = '';
+  WbemPassword = '';
+  WbemComputer = 'localhost';
+  wbemFlagForwardOnly = $00000020;
+var
+  LFSWbemLocator: OLEVariant;
+  LFWMIService: OLEVariant;
+  LFWbemObjectSet: OLEVariant;
+  LFWbemObject: OLEVariant;
+  LEnum: IEnumvariant;
+  LValue: LongWord;
+begin;
+  try
+    LFSWbemLocator := CreateOleObject('WbemScripting.SWbemLocator');
+    LFWMIService := LFSWbemLocator.ConnectServer(WbemComputer, 'root\CIMV2',
+      WbemUser, WbemPassword);
+    LFWbemObjectSet := LFWMIService.ExecQuery
+      ('SELECT Name,PNPDeviceID  FROM Win32_VideoController', 'WQL',
+      wbemFlagForwardOnly);
+    LEnum := IUnknown(LFWbemObjectSet._NewEnum) as IEnumvariant;
+    while LEnum.Next(1, LFWbemObject, LValue) = 0 do
+    begin
+      result := String(LFWbemObject.Name);
+      LFWbemObject := Unassigned;
+    end;
+  except
+  end;
+end;
+
+class function  TGVUtil.EncryptString(const aValue: string; const aPassword: string; aEncryp: Boolean): string;
+var
+  LStream: TStringStream;
+begin
+  LStream := TStringStream.Create(aValue);
+  CryptBuffer(LStream.Memory, LStream.Size, aPassword, aEncryp);
+  Result := LStream.DataString;
+  FreeAndNil(LStream);
+end;
+
+class function TGVUtil.StringMacro(const aString: string; const aMacro: string; const aValue: string; const aPrefix: string; const aPostfix: string): string;
+var
+  LMacro: string;
+begin
+  LMacro := aPrefix + aMacro + aPostfix;
+  Result := aString.Replace(LMacro, aValue);
+end;
+
+class function TGVUtil.StringMacro(const aString: string; const aMacro: string; const aValue: Int64; const aPrefix: string; const aPostfix: string): string;
+var
+  LMacro: string;
+begin
+  LMacro := aPrefix + aMacro + aPostfix;
+  Result := aString.Replace(LMacro, aValue.ToString);
+end;
+
+class function TGVUtil.StringMacro(const aString: string; const aMacro: string; const aValue: UInt64; const aPrefix: string; const aPostfix: string): string;
+var
+  LMacro: string;
+begin
+  LMacro := aPrefix + aMacro + aPostfix;
+  Result := aString.Replace(LMacro, aValue.ToString);
+end;
+
+class function TGVUtil.StringMacro(const aString: string; const aMacro: string; const aValue: Double; const aPrefix: string; const aPostfix: string): string;
+var
+  LMacro: string;
+begin
+  LMacro := aPrefix + aMacro + aPostfix;
+  Result := aString.Replace(LMacro, aValue.ToString);
+end;
+
+class function TGVUtil.EaseValue(aCurrentTime: Double; aStartValue: Double; aChangeInValue: Double; aDuration: Double; aEaseType: TGVEaseType): Double;
+begin
+  Result := 0;
+  case aEaseType of
+    etLinearTween:
+      begin
+        Result := aChangeInValue * aCurrentTime / aDuration + aStartValue;
+      end;
+
+    etInQuad:
+      begin
+        aCurrentTime := aCurrentTime / aDuration;
+        Result := aChangeInValue * aCurrentTime * aCurrentTime + aStartValue;
+      end;
+
+    etOutQuad:
+      begin
+        aCurrentTime := aCurrentTime / aDuration;
+        Result := -aChangeInValue * aCurrentTime * (aCurrentTime-2) + aStartValue;
+      end;
+
+    etInOutQuad:
+      begin
+        aCurrentTime := aCurrentTime / (aDuration / 2);
+        if aCurrentTime < 1 then
+          Result := aChangeInValue / 2 * aCurrentTime * aCurrentTime + aStartValue
+        else
+        begin
+          aCurrentTime := aCurrentTime - 1;
+          Result := -aChangeInValue / 2 * (aCurrentTime * (aCurrentTime - 2) - 1) + aStartValue;
+        end;
+      end;
+
+    etInCubic:
+      begin
+        aCurrentTime := aCurrentTime / aDuration;
+        Result := aChangeInValue * aCurrentTime * aCurrentTime * aCurrentTime + aStartValue;
+      end;
+
+    etOutCubic:
+      begin
+        aCurrentTime := (aCurrentTime / aDuration) - 1;
+        Result := aChangeInValue * ( aCurrentTime * aCurrentTime * aCurrentTime + 1) + aStartValue;
+      end;
+
+    etInOutCubic:
+      begin
+        aCurrentTime := aCurrentTime / (aDuration/2);
+        if aCurrentTime < 1 then
+          Result := aChangeInValue / 2 * aCurrentTime * aCurrentTime * aCurrentTime + aStartValue
+        else
+        begin
+          aCurrentTime := aCurrentTime - 2;
+          Result := aChangeInValue / 2 * (aCurrentTime * aCurrentTime * aCurrentTime + 2) + aStartValue;
+        end;
+      end;
+
+    etInQuart:
+      begin
+        aCurrentTime := aCurrentTime / aDuration;
+        Result := aChangeInValue * aCurrentTime * aCurrentTime * aCurrentTime * aCurrentTime + aStartValue;
+      end;
+
+    etOutQuart:
+      begin
+        aCurrentTime := (aCurrentTime / aDuration) - 1;
+        Result := -aChangeInValue * (aCurrentTime * aCurrentTime * aCurrentTime * aCurrentTime - 1) + aStartValue;
+      end;
+
+    etInOutQuart:
+      begin
+        aCurrentTime := aCurrentTime / (aDuration / 2);
+        if aCurrentTime < 1 then
+          Result := aChangeInValue / 2 * aCurrentTime * aCurrentTime * aCurrentTime * aCurrentTime + aStartValue
+        else
+        begin
+          aCurrentTime := aCurrentTime - 2;
+          Result := -aChangeInValue / 2 * (aCurrentTime * aCurrentTime * aCurrentTime * aCurrentTime - 2) + aStartValue;
+        end;
+      end;
+
+    etInQuint:
+      begin
+        aCurrentTime := aCurrentTime / aDuration;
+        Result := aChangeInValue * aCurrentTime * aCurrentTime * aCurrentTime * aCurrentTime * aCurrentTime + aStartValue;
+      end;
+
+    etOutQuint:
+      begin
+        aCurrentTime := (aCurrentTime / aDuration) - 1;
+        Result := aChangeInValue * (aCurrentTime * aCurrentTime * aCurrentTime * aCurrentTime * aCurrentTime + 1) + aStartValue;
+      end;
+
+    etInOutQuint:
+      begin
+        aCurrentTime := aCurrentTime / (aDuration / 2);
+        if aCurrentTime < 1 then
+          Result := aChangeInValue / 2 * aCurrentTime * aCurrentTime * aCurrentTime * aCurrentTime * aCurrentTime + aStartValue
+        else
+        begin
+          aCurrentTime := aCurrentTime - 2;
+          Result := aChangeInValue / 2 * (aCurrentTime * aCurrentTime * aCurrentTime * aCurrentTime * aCurrentTime + 2) + aStartValue;
+        end;
+      end;
+
+    etInSine:
+      begin
+        Result := -aChangeInValue * Cos(aCurrentTime / aDuration * (PI / 2)) + aChangeInValue + aStartValue;
+      end;
+
+    etOutSine:
+      begin
+        Result := aChangeInValue * Sin(aCurrentTime / aDuration * (PI / 2)) + aStartValue;
+      end;
+
+    etInOutSine:
+      begin
+        Result := -aChangeInValue / 2 * (Cos(PI * aCurrentTime / aDuration) - 1) + aStartValue;
+      end;
+
+    etInExpo:
+      begin
+        Result := aChangeInValue * Power(2, 10 * (aCurrentTime/aDuration - 1) ) + aStartValue;
+      end;
+
+    etOutExpo:
+      begin
+        Result := aChangeInValue * (-Power(2, -10 * aCurrentTime / aDuration ) + 1 ) + aStartValue;
+      end;
+
+    etInOutExpo:
+      begin
+        aCurrentTime := aCurrentTime / (aDuration/2);
+        if aCurrentTime < 1 then
+          Result := aChangeInValue / 2 * Power(2, 10 * (aCurrentTime - 1) ) + aStartValue
+        else
+         begin
+           aCurrentTime := aCurrentTime - 1;
+           Result := aChangeInValue / 2 * (-Power(2, -10 * aCurrentTime) + 2 ) + aStartValue;
+         end;
+      end;
+
+    etInCircle:
+      begin
+        aCurrentTime := aCurrentTime / aDuration;
+        Result := -aChangeInValue * (Sqrt(1 - aCurrentTime * aCurrentTime) - 1) + aStartValue;
+      end;
+
+    etOutCircle:
+      begin
+        aCurrentTime := (aCurrentTime / aDuration) - 1;
+        Result := aChangeInValue * Sqrt(1 - aCurrentTime * aCurrentTime) + aStartValue;
+      end;
+
+    etInOutCircle:
+      begin
+        aCurrentTime := aCurrentTime / (aDuration / 2);
+        if aCurrentTime < 1 then
+          Result := -aChangeInValue / 2 * (Sqrt(1 - aCurrentTime * aCurrentTime) - 1) + aStartValue
+        else
+        begin
+          aCurrentTime := aCurrentTime - 2;
+          Result := aChangeInValue / 2 * (Sqrt(1 - aCurrentTime * aCurrentTime) + 1) + aStartValue;
+        end;
+      end;
+  end;
+end;
+
+class function TGVUtil.EasePosition(aStartPos: Double; aEndPos: Double; aCurrentPos: Double; aEaseType: TGVEaseType): Double;
+var
+  LT, LB, LC, LD: Double;
+begin
+  LC := aEndPos - aStartPos;
+  LD := 100;
+  LT := aCurrentPos;
+  LT := EnsureRange(LT, 0, 100);
+  LB := aStartPos;
+  Result := EaseValue(LT, LB, LC, LD, aEaseType);
+  //if Result > 100 then
+  //  Result := 100;
+end;
+
+class function TGVUtil.URLEncode(const Url: string): string;
+var
+  i: Integer;
+  UrlA: ansistring;
+  res: ansistring;
+begin
+  res := '';
+  UrlA := ansistring(UTF8Encode(Url));
+
+  for i := 1 to Length(UrlA) do
+  begin
+    case UrlA[i] of
+      'A'..'Z', 'a'..'z', '0'..'9', '-', '_', '.':
+        res := res + UrlA[i];
+    else
+        res := res + '%' + ansistring(IntToHex(Ord(UrlA[i]), 2));
+    end;
+  end;
+
+  Result := string(res);
+end;
+
+class function TGVUtil.URLEncodeTilde(const Url: string): string;
+var
+  i: Integer;
+begin
+  Result := '';
+  for i := 1 to Length(Url) do
+  begin
+    case Url[i] of
+      'A'..'Z', 'a'..'z', '0'..'9', '-', '_', '.','~':
+        Result := Result + Url[i];
+    else
+        Result := Result + '%' + IntToHex(Ord(Url[i]), 2);
+    end;
+  end;
+end;
+
+class function TGVUtil.HTTPEncode(const AStr: ansistring): AnsiString;
+// The NoConversion set contains characters as specificed in RFC 1738 and
+// should not be modified unless the standard changes.
+const
+  NoConversion = ['A'..'Z','a'..'z','*','@','.','_','-',
+                  '0'..'9','$','!','''','(',')'];
+var
+  Sp, Rp: PAnsiChar;
+begin
+  SetLength(Result, Length(AStr) * 3);
+  Sp := PAnsiChar(AStr);
+  Rp := PAnsiChar(Result);
+  while Sp^ <> #0 do
+  begin
+    if Sp^ in NoConversion then
+      Rp^ := Sp^
+    else
+      if Sp^ = ' ' then
+        Rp^ := '+'
+      else
+      begin
+        {$IFDEF DELPHIXE4_LVL}
+        AnsiStrings.FormatBuf(Rp^, 3, AnsiString('%%%.2x'), 6, [Ord(Sp^)]);
+        {$ENDIF}
+        {$IFNDEF DELPHIXE4_LVL}
+        FormatBuf(Rp^, 3, AnsiString('%%%.2x'), 6, [Ord(Sp^)]);
+        {$ENDIF}
+        Inc(Rp,2);
+      end;
+    Inc(Rp);
+    Inc(Sp);
+  end;
+  SetLength(Result, Rp - PAnsiChar(Result));
+end;
+
+class function TGVUtil.URLEncodeRFC3986(URL: string): string;
+var
+  URL1: string;
+begin
+  URL1 := UrlEncode(URL);
+  URL1 := StringReplace(URL1, '+', ' ', [rfReplaceAll, rfIgnoreCase]);
+  Result := URL1;
+end;
+
+class function TGVUtil.EncodeParams(Params: TStringList; splitter: string; quot: Boolean; encodeHttp: Boolean = false): string;
+var
+  arr: TStringList;
+  buf: string;
+  I: Integer;
+
+begin
+  arr := TStringList.Create;
+  arr.Clear;
+
+  for I := 0 to Params.Count - 1 do
+  begin
+    begin
+      if quot then
+        buf := Params.Names[I] + '="' + Params.ValueFromIndex[I] + '"'
+      else
+      begin
+        if encodeHttp then
+          buf := Params.Names[I] + '=' +
+            String(HTTPEncode(UTF8Encode(Params.ValueFromIndex[I]))) + ''
+        else
+          buf := Params.Names[I] + '=' + UrlEncode
+            (String(UTF8Encode(Params.ValueFromIndex[I]))) + '';
+
+      end;
+      arr.Add(buf);
+    end;
+  end;
+
+  if not quot then
+    arr.Sort;
+
+  buf := '';
+
+  for I := 0 to arr.Count - 1 do
+  begin
+    if (buf <> '') then
+      buf := buf + splitter;
+    buf := buf + arr.Strings[I];
+  end;
+  arr.Free;
+  Result := buf;
+end;
+
 
 end.

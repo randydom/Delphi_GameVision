@@ -90,6 +90,7 @@ type
     function GetPasswordFilename(const aFilename: string): PAnsiChar;
     function OpenFile(const aFilename: string): TGVArchiveFile; overload;
     function ExtractToBuffer(const aFilename: string): TGVBuffer;
+    function ExtractToStream(const aFilename: string): TStream;
     function Build(const aPassword: string; const aFilename: string; const aDirectory: string; aOnProgress: TGVArchiveBuildProgressEvent): Boolean;
   end;
 
@@ -242,6 +243,27 @@ begin
     FreeAndNil(LFile);
     Exit;
   end;
+  LFile.Read(LResult.Memory, LResult.Size);
+  FreeAndNil(LFile);
+  Result := LResult;
+end;
+
+function TGVArchive.ExtractToStream(const aFilename: string): TStream;
+var
+  LFile: TGVArchiveFile;
+  LResult: TMemoryStream;
+begin
+  Result := nil;
+  if not FIsOpen then Exit;
+  LFile := OpenFile(aFilename);
+  if LFile = nil then Exit;
+  if LFile.Size = 0 then
+  begin
+    FreeAndNil(LFile);
+    Exit;
+  end;
+  LResult := TMemoryStream.Create;
+  LResult.SetSize(LFile.Size);
   LFile.Read(LResult.Memory, LResult.Size);
   FreeAndNil(LFile);
   Result := LResult;

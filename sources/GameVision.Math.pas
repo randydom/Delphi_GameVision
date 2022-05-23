@@ -422,16 +422,34 @@ begin
   System.Randomize;
 end;
 
+function _RandomRange(const aFrom, aTo: Integer): Integer;
+var
+  LFrom: Integer;
+  LTo: Integer;
+begin
+  LFrom := aFrom;
+  LTo := aTo;
+
+  if AFrom > ATo then
+    Result := Random(LFrom - LTo) + ATo
+  else
+    Result := Random(LTo - LFrom) + AFrom;
+
+  //Result := RandomRange(aFrom, Result);
+end;
+
 function  TGVMath.RandomRange(aMin, aMax: Integer): Integer;
 begin
-  Result := System.Math.RandomRange(aMin, aMax + 1);
+  //Result := System.Math.RandomRange(aMin, aMax + 1);
+  Result := _RandomRange(aMin, aMax + 1);
 end;
 
 function  TGVMath.RandomRange(aMin, aMax: Single): Single;
 var
   LNum: Single;
 begin
-  LNum := System.Math.RandomRange(0, MaxInt) / MaxInt;
+  //LNum := System.Math.RandomRange(0, MaxInt) / MaxInt;
+  LNum := _RandomRange(0, MaxInt) / MaxInt;
   Result := aMin + (LNum * (aMax - aMin));
 end;
 
