@@ -58,7 +58,6 @@ interface
 
 uses
   System.SysUtils,
-
   GameVision.Base;
 
 type
@@ -83,12 +82,14 @@ type
     constructor Create; override;
     destructor Destroy; override;
     procedure Setup(const aApiKey: string; aHandler: TGVSocialPostEvent);
+    procedure SaveAccounts(const aFilename: string);
     procedure Post(aAccountId: string; const aMsg: string; const aMediaFilename: string='');
   end;
 
 implementation
 
 uses
+  System.Classes,
   System.IOUtils,
   System.Net.HttpClient,
   System.Net.URLClient,
@@ -99,36 +100,50 @@ uses
 { TGVSocial }
 procedure TGVSocial.DoPost(aAccountId: string; const aMsg: string; const aMediaFilename: string='');
 var
-  d: TMultipartFormData;
-  c: THTTPClient;
-  s: string;
-  j: TGVJsonObject;
+  LFormData: TMultipartFormData;
+  LHttpClient: THTTPClient;
+  LString: string;
+  LJson: TGVJsonObject;
 begin
   if FApiKey.IsEmpty then Exit;
   if aAccountId.IsEmpty then Exit;
   if aMsg.IsEmpty then Exit;
+
   FMediaFilename := '';
   FSuccess := False;
   FError := '';
+
   if not aMediaFilename.IsEmpty then
   begin
     if TFile.Exists(aMediaFilename) then
       FMediaFilename := aMediaFilename
   end;
 
-  d := TMultipartFormData.Create;
-  c := THTTPClient.Create;
-  d.AddField('key', FApiKey);
-  d.AddField('id', aAccountId);
-  d.AddField('msg', aMsg);
-  if not FMediaFilename.IsEmpty then
-    d.AddFile('media', FMediaFilename);
-  s := c.Post('https://api.dlvrit.com/1/postToAccount.json', d).ContentAsString;
-  j := TGVJsonObject.Parse(s) as TGVJsonObject;
-  if j.Contains('errors') then
-    FError :=  j.O['errors'].Items[0].Value
-  else
-    FSuccess := True;
+  LFormData := TMultipartFormData.Create;
+  try
+    LHttpClient := THTTPClient.Create;
+    try
+      LFormData.AddField('key', FApiKey);
+      LFormData.AddField('id', aAccountId);
+      LFormData.AddField('msg', aMsg);
+      if not FMediaFilename.IsEmpty then
+        LFormData.AddFile('media', FMediaFilename);
+      LString := LHttpClient.Post('https://api.dlvrit.com/1/postToAccount.json', LFormData).ContentAsString;
+      LJson := TGVJsonObject.Parse(LString) as TGVJsonObject;
+      try
+        if LJson.Contains('errors') then
+          FError :=  LJson.O['errors'].Items[0].Value
+        else
+          FSuccess := True;
+      finally
+        FreeAndNil(LJson);
+      end;
+    finally
+      FreeAndNil(LHttpClient);
+    end;
+  finally
+    FreeAndNil(LFormData);
+  end;
 end;
 
 procedure TGVSocial.OnPostEvent(const aSuccess: Boolean; const aErrorMsg: string; const aMsg: string; const aMediaFilename: string);
@@ -155,6 +170,59 @@ begin
   FApiKey := aApiKey;
   FOnPost := aHandler;
   FBusy := False;
+end;
+
+procedure TGVSocial.SaveAccounts(const aFilename: string);
+var
+  LFormData: TMultipartFormData;
+  LHttpClient: THTTPClient;
+  LString: string;
+  LJson: TGVJsonObject;
+  LIndex,LCount: Integer;
+  LFile: TStringList;
+begin
+  if FApiKey.IsEmpty then Exit;
+  if aFilename.IsEmpty then Exit;
+
+  LFile := TStringList.Create;
+  try
+    LFormData := TMultipartFormData.Create;
+    try
+      LHttpClient := THTTPClient.Create;
+      try
+        LFormData.AddField('key', FApiKey);
+        LString := LHttpClient.Post('https://api.dlvrit.com/1/accounts.json', LFormData).ContentAsString;
+        LJson := TGVJsonObject.Parse(LString) as TGVJsonObject;
+        try
+          if LJson.Contains('errors') then Exit;
+          LCount := LJson.A['accounts'].Count;
+          for LIndex := 0 to LCount-1 do
+          begin
+            LString := Format(
+              'account id="%s", name="%s", service="%s", url="%s"',
+              [
+              LJson.A['accounts'].Values[LIndex].S['id'],
+              LJson.A['accounts'].Values[LIndex].S['name'],
+              LJson.A['accounts'].Values[LIndex].S['service'],
+              LJson.A['accounts'].Values[LIndex].S['url']
+              ]
+            );
+            LFile.Add(LString);
+          end;
+          LFile.SaveToFile(aFilename);
+
+        finally
+          FreeAndNil(LJson);
+        end;
+      finally
+        FreeAndNil(LHttpClient);
+      end;
+    finally
+      FreeAndNil(LFormData);
+    end;
+  finally
+    FreeAndNil(LFile);
+  end;
 end;
 
 procedure TGVSocial.Post(aAccountId: string; const aMsg: string; const aMediaFilename: string='');
